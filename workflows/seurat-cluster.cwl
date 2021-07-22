@@ -1372,8 +1372,8 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-s:name: "Seurat Cluster"
 label: "Seurat Cluster"
+s:name: "Seurat Cluster"
 s:alternateName: "Runs filtering, integration, and clustering analyses for Cell Ranger Count Gene Expression or Cell Ranger Aggregate experiments"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/workflows/seurat-cluster.cwl

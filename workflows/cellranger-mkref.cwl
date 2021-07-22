@@ -186,8 +186,8 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-s:name: "Cell Ranger Build Reference Indices"
 label: "Cell Ranger Build Reference Indices"
+s:name: "Cell Ranger Build Reference Indices"
 s:alternateName: "Builds reference genome indices for Cell Ranger Gene Expression and Cell Ranger Multiome ATAC + Gene Expression experiments"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/workflows/cellranger-mkref.cwl

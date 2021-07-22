@@ -392,11 +392,11 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-s:name: "Cell Ranger Count Gene Expression"
 label: "Cell Ranger Count Gene Expression"
+s:name: "Cell Ranger Count Gene Expression"
 s:alternateName: "Counts gene expression for a single library"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/workflows/single-cell-preprocess-cellranger.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/workflows/cellranger-count.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
