@@ -11,7 +11,7 @@ requirements:
 
 'sd:upstream':
   sc_rnaseq_sample:
-  - "single-cell-preprocess-cellranger.cwl"
+  - "cellranger-count.cwl"
 
 
 inputs:

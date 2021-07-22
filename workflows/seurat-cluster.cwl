@@ -16,6 +16,7 @@ requirements:
           return (splitted_line && !!splitted_line.length)?splitted_line:null;
       };
 
+
 'sd:upstream':
   sc_rnaseq_aggr_sample:
   - "cellranger-aggr.cwl"

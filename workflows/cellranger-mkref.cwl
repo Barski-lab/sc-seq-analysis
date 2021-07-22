@@ -9,11 +9,6 @@ requirements:
   - class: MultipleInputFeatureRequirement
 
 
-'sd:upstream':
-  genome_indices:
-    - "genome-indices.cwl"
-
-
 inputs:
 
   alias:
@@ -25,18 +20,14 @@ inputs:
   genome_fasta_file:
     type: File
     format: "http://edamontology.org/format_1929"
-    label: "Genome type"
+    label: "Reference genome FASTA file"
     doc: "Reference genome FASTA file that includes all chromosomes"
-    'sd:upstreamSource': "genome_indices/fasta_output"
-    'sd:localLabel': true
 
   annotation_gtf_file:
     type: File
     format: "http://edamontology.org/format_2306"
-    label: "Genome type"
+    label: "Reference genome GTF annotation file"
     doc: "GTF annotation file that includes refGene and mitochondrial DNA annotations"
-    'sd:upstreamSource': "genome_indices/annotation_gtf"
-    'sd:localLabel': true
 
   threads:
     type: int?
