@@ -3,7 +3,7 @@
 
 **For detailed tutorial on how to use this set of workflows refer to the [Documenation](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
 
-This repository contained CWL pipelines for scRNA-Seq data analysis. Each of the following command line tools was wrapped into CWL compatible format and combined into the workflows.
+This repository containes CWL pipelines for scRNA-Seq data analysis. Each of the following command line tools was wrapped into CWL format and combined into the workflows.
 
 **Used tools and versions:**
 - [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/overview/welcome) 4.0.0
