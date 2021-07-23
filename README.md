@@ -3,7 +3,7 @@
 
 **For detailed tutorial on how to use this set of workflows refer to the [Documenation](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
 
-This repository containes CWL pipelines for scRNA-Seq data analysis. Each of the used command line tools was wrapped into CWL format and combined into the workflows.
+This repository contains CWL pipelines for scRNA-Seq data analysis. Each of the used command line tools was wrapped into CWL format and combined into the workflows.
 
 ![](./docs/images/figure_1.png)
 
