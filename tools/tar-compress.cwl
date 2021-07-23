@@ -24,10 +24,11 @@ outputs:
     type: File
     outputBinding:
       glob: "*"
-    doc: "Compressed folder"
 
 
 baseCommand: ["tar"]
+
+
 arguments:
   - valueFrom: $(inputs.folder_to_compress.path.split("/").slice(0,-1).join("/"))
     prefix: "-C"
@@ -42,9 +43,9 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "tar-compress"
-s:name: "tar-compress"
-s:alternateName: "tar-compress"
+label: "TAR compress"
+s:name: "TAR compress"
+s:alternateName: "Creates compressed TAR file from a folder"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/tar-compress.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
@@ -82,5 +83,6 @@ s:creator:
 
         
 doc: |
-  Compresses input directory to tar.gz
-
+  TAR compress
+  ============
+  Creates compressed TAR file from a folder
