@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/Barski-lab/scRNA-Seq-Analysis.svg?branch=main)](https://travis-ci.com/Barski-lab/scRNA-Seq-Analysis)
 # scRNA-Seq-Analysis
 
-**For detailed Tutorial on how to use this set of workflows refer to the [Documenations](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
+**For detailed tutorial on how to use this set of workflows refer to the [Documenations](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
 
 This repository contained CWL pipelines for scRNA-Seq data analysis. Each of the following command line tools was wrapped into CWL compatible format and combined into the workflows.
 
