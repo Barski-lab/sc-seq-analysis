@@ -219,9 +219,9 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "Cellranger count - generates single cell feature counts for a single library"
-s:name: "Cellranger count - generates single cell feature counts for a single library"
-s:alternateName: "Counts gene expression and feature barcoding reads from a single sample and GEM well"
+label: "Cell Ranger Count Gene Expression"
+s:name: "Cell Ranger Count Gene Expression"
+s:alternateName: "Quantifies gene expression from a single scRNA-Seq library"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-count.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
@@ -259,7 +259,10 @@ s:creator:
 
 
 doc: |
-  Generates single cell feature counts for a single library.
+  Cell Ranger Count Gene Expression
+  =================================
+  
+  Quantifies gene expression from a single scRNA-Seq library
 
   Input parameters for Feature Barcode, Targeted Gene Expression and CRISPR-specific
   analyses are not implemented, therefore the correspondent outputs are also excluded.
@@ -272,52 +275,3 @@ doc: |
   Why do we need to rename input files?
   Refer to the "My FASTQs are not named like any of the above examples" section of
   https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/fastq-input
-
-
-s:about: |
-  Count gene expression and feature barcoding reads from a single sample and GEM well
-
-  USAGE:
-      cellranger count [FLAGS] [OPTIONS] --id <ID> --transcriptome <PATH>
-
-  FLAGS:
-          --no-target-umi-filter    Turn off the target UMI filtering subpipeline
-          --nosecondary             Disable secondary analysis, e.g. clustering. Optional
-          --no-libraries            Proceed with processing using a --feature-ref but no Feature Barcode libraries specified with the 'libraries' flag
-          --dry                     Do not execute the pipeline. Generate a pipeline invocation (.mro) file and stop
-          --disable-ui              Do not serve the UI
-          --noexit                  Keep web UI running after pipestance completes or fails
-          --nopreflight             Skip preflight checks
-      -h, --help                    Prints help information
-
-  OPTIONS:
-          --id <ID>                 A unique run id and output folder name [a-zA-Z0-9_-]+
-          --description <TEXT>      Sample description to embed in output files
-          --transcriptome <PATH>    Path of folder containing 10x-compatible transcriptome reference
-      -f, --fastqs <PATH>...        Path to input FASTQ data
-      -p, --project <TEXT>          Name of the project folder within a mkfastq or bcl2fastq-generated folder to pick FASTQs from
-      -s, --sample <PREFIX>...      Prefix of the filenames of FASTQs to select
-          --lanes <NUMS>...         Only use FASTQs from selected lanes
-          --libraries <CSV>         CSV file declaring input library data sources
-          --feature-ref <CSV>       Feature reference CSV file, declaring Feature Barcode constructs and associated barcodes
-          --target-panel <CSV>      The target panel CSV file declaring the target panel used, if any
-          --expect-cells <NUM>      Expected number of recovered cells
-          --force-cells <NUM>       Force pipeline to use this number of cells, bypassing cell detection
-          --r1-length <NUM>         Hard trim the input Read 1 to this length before analysis
-          --r2-length <NUM>         Hard trim the input Read 2 to this length before analysis
-          --chemistry <CHEM>        Assay configuration. NOTE: by default the assay configuration is detected automatically, which is the recommened mode. You usually will not need
-                                    to specify a chemistry. Options are: 'auto' for autodetection, 'threeprime' for Single Cell 3', 'fiveprime' for  Single Cell 5', 'SC3Pv1' or
-                                    'SC3Pv2' or 'SC3Pv3' for Single Cell 3' v1/v2/v3, 'SC5P-PE' or 'SC5P-R2' for Single Cell 5', paired-end/R2-only, 'SC-FB' for Single Cell Antibody-
-                                    only 3' v2 or 5' [default: auto]
-          --jobmode <MODE>          Job manager to use. Valid options: local (default), sge, lsf, slurm or a .template file. Search for help on "Cluster Mode" at
-                                    support.10xgenomics.com for more details on configuring the pipeline to use a compute cluster [default: local]
-          --localcores <NUM>        Set max cores the pipeline may request at one time. Only applies to local jobs
-          --localmem <NUM>          Set max GB the pipeline may request at one time. Only applies to local jobs
-          --localvmem <NUM>         Set max virtual address space in GB for the pipeline. Only applies to local jobs
-          --mempercore <NUM>        Reserve enough threads for each job to ensure enough memory will be available, assuming each core on your cluster has at least this much memory
-                                    available. Only applies in cluster jobmodes
-          --maxjobs <NUM>           Set max jobs submitted to cluster at one time. Only applies in cluster jobmodes
-          --jobinterval <NUM>       Set delay between submitting jobs to cluster, in ms. Only applies in cluster jobmodes
-          --overrides <PATH>        The path to a JSON file that specifies stage-level overrides for cores and memory. Finer-grained than --localcores, --mempercore and --localmem.
-                                    Consult the 10x support website for an example override file
-          --uiport <PORT>           Serve web UI at http://localhost:PORT

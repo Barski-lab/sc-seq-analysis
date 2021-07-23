@@ -136,6 +136,7 @@ s:creator:
 doc: |
   Extract FASTQ
   =============
+  
   Extracts bzip2-/gzip-/zip-compressed FASTQ file.
   If several FASTQ files are provided, they will be concatenated
   in the order that corresponds to files in input.

@@ -116,10 +116,10 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "Cell Ranger ARC mkref - builds compatible with Cell Ranger ARC indices"
-s:name: "Cell Ranger ARC mkref - builds compatible with Cell Ranger ARC indices"
-s:alternateName: "Builds compatible with Cell Ranger ARC reference folder from user-supplied genome FASTA and gene GTF files"
-
+label: "Cell Ranger ARC Build Reference Indices"
+s:name: "Cell Ranger ARC Build Reference Indices"
+s:alternateName: "Builds a Cell Ranger ARC compatible reference folder from the custom genome FASTA and gene GTF annotation files"
+                 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-arc-mkref.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
@@ -156,71 +156,14 @@ s:creator:
 
 
 doc: |
-  Reference preparation tool for 10x Genomics Cell Ranger Multiome ATAC + Gene Expression
-
+  Cell Ranger ARC Build Reference Indices
+  =======================================
+  
+  Builds a Cell Ranger ARC compatible reference folder from the
+  custom genome FASTA and gene GTF annotation files
+  
   Notes:
-  - `input_motifs` parameter in the `config.txt` file is not implemented
-  - if GTF file provided in `annotation_gtf_file` has duplicate gene_id, they should be
-    grouped together. Applicable to to USCS RefGene annotations.
-
-
-s:about: |
-  Reference preparation tool for 10x Genomics Cell Ranger Multiome ATAC + Gene Expression.
-
-  Build a reference package from a user-supplied genome FASTA and gene GTF file.
-  Creates a new folder named after the genome.
-
-  NOTE: Multi-species references are not supported by cellranger-arc. If you
-  construct a multi-species reference and run 'cellranger-arc count' you will not
-  be able to generate all the outputs of the pipeline.
-
-  The commands below should be preceded by 'cellranger-arc':
-
-  Usage:
-      mkref
-          --config=PATH
-          [options]
-      mkref -h | --help | --version
-
-  Arguments:
-      config              Path to configuration file containing additional
-                              information about the reference. See online
-                              documentation for more details. The following is an
-                              example of a config file:
-                              {
-                                  organism: "human"
-                                  genome: ["GRCh38"]
-                                  input_fasta: ["/path/to/GRCh38/assembly.fa"]
-                                  input_gtf: ["/path/to/gencode/annotation.gtf"]
-                                  non_nuclear_contigs: ["chrM"]
-                                  input_motifs: "/path/to/jaspar/motifs.pfm"
-                              }
-                              Parameters:
-                                  - organism: (optional; string) name of the
-                                      organism
-                                  - genome: (required; list of strings) name(s) of
-                                      the genome(s) that comprise the organism
-                                  - input_fasta: (required; list of paths) path(s)
-                                      to the assembly fasta file(s) for each
-                                      genome
-                                  - input_gtf: (required; list of paths) path(s)
-                                      to the gene annotation GTF file(s) for each
-                                      genome
-                                  - non_nuclear_contigs:
-                                      (optional; list of strings) contigs in the
-                                      assembly that are not nuclear and have no
-                                      chromatin structure (e.g., mitochondria)
-                                  - input_motifs: (optional; path) path to a
-                                      motif annotations file in the JASPAR format
-                              The above config file would create a reference
-                              package in "$(pwd)/GRCh38".
-
-  Options:
-      --nthreads=<num>    Number of threads used during STAR genome index
-                              generation. Defaults to 1.
-      --memgb=<num>       Maximum memory (GB) used when aligning reads with STAR.
-                              Defaults to 16.
-      --ref-version=<str> Optional reference version string to include with
-                              reference.
-      -h --help           Show this message.
-      --version           Show version.
+  - `input_motifs` parameter in the `config.txt` file is not implemented.
+  - if GTF file provided in `annotation_gtf_file` has records with duplicate
+    gene_id, they should be grouped together. Applicable to to USCS RefGene
+    annotations.

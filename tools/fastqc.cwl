@@ -198,4 +198,5 @@ s:creator:
 doc: |
   FastQC
   ======
+  
   Runs FastQC for quality control checks of input FASTQ file

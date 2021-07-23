@@ -96,9 +96,9 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "Cell Ranger mkref - builds a Cell Ranger compatible indices"
-s:name: "Cell Ranger mkref - builds a Cell Ranger compatible indices"
-s:alternateName: "Builds a Cell Ranger compatible reference folder from user-supplied genome FASTA and gene GTF files"
+label: "Cell Ranger Build Reference Indices"
+s:name: "Cell Ranger Build Reference Indices"
+s:alternateName: "Builds a Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-mkref.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
@@ -136,37 +136,8 @@ s:creator:
 
 
 doc: |
-  Builds a Cell Ranger compatible reference folder from user-supplied
-  genome FASTA and gene GTF files.
-
-
-s:about: |
-  Usage:
-      mkref
-          --genome=NAME ...
-          --fasta=PATH ...
-          --genes=PATH ...
-          [options]
-      mkref -h | --help | --version
-
-  Arguments:
-      genome              Unique genome name(s), used to name output folder
-                              [a-zA-Z0-9_-]+. Specify multiple genomes by
-                              specifying the --genome argument multiple times; the
-                              output folder will be <name1>_and_<name2>.
-      fasta               Path(s) to FASTA file containing your genome reference.
-                              Specify multiple genomes by specifying the --fasta
-                              argument multiple times.
-      genes               Path(s) to genes GTF file(S) containing annotated genes
-                              for your genome reference. Specify multiple genomes
-                              by specifying the --genes argument multiple times.
-
-  Options:
-      --nthreads=<num>    Number of threads used during STAR genome index
-                              generation. Defaults to 1.
-      --memgb=<num>       Maximum memory (GB) used when aligning reads with STAR.
-                              Defaults to 16.
-      --ref-version=<str> Optional reference version string to include with
-                              reference.
-      -h --help           Show this message.
-      --version           Show version.
+  Cell Ranger Build Reference Indices
+  ===================================
+  
+  Builds a Cell Ranger compatible reference folder from
+  the custom genome FASTA and gene GTF annotation files

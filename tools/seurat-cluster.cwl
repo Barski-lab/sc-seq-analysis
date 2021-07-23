@@ -1017,9 +1017,9 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "seurat-cluster"
-s:name: "seurat-cluster"
-s:alternateName: "seurat-cluster"
+label: "Seurat cluster"
+s:name: "Seurat cluster"
+s:alternateName: "Runs Seurat for comparative scRNA-seq analysis of across experimental conditions"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/seurat-cluster.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
@@ -1057,102 +1057,7 @@ s:creator:
 
 
 doc: |
+  Seurat cluster
+  ==============
+  
   Runs Seurat for comparative scRNA-seq analysis of across experimental conditions
-
-
-s:about: |
-  usage: run_seurat.R
-        [-h] --mex MEX --identity IDENTITY [--condition CONDITION]
-        [--classifier CLASSIFIER] [--cellcycle CELLCYCLE] [--barcodes BARCODES]
-        [--mincells MINCELLS] [--minfeatures MINFEATURES]
-        [--maxfeatures MAXFEATURES] [--minumi MINUMI] [--minnovelty MINNOVELTY]
-        [--maxmt MAXMT] [--mitopattern MITOPATTERN]
-        [--features [FEATURES [FEATURES ...]]] [--regresscellcycle]
-        [--regressmt] [--highvarcount HIGHVARCOUNT] [--ndim NDIM]
-        [--resolution [RESOLUTION [RESOLUTION ...]]] [--logfc LOGFC]
-        [--minpct MINPCT] [--onlypos]
-        [--testuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}]
-        [--species {hs,mm,none}] [--pdf] [--rds] [--output OUTPUT]
-        [--threads THREADS]
-
-  Runs Seurat for comparative scRNA-seq analysis of across experimental
-  conditions
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    --mex MEX             Path to the folder with not normalized aggregated
-                          feature-barcode matrices in MEX format
-    --identity IDENTITY   Path to the aggregation CSV file to set the initial
-                          cell identity classes
-    --condition CONDITION
-                          Path to the TSV/CSV file to define datasets conditions
-                          for grouping. First column - 'library_id' with values
-                          from the --identity file, second column 'condition'.
-                          Default: each dataset is assigned to its own
-                          biological condition
-    --classifier CLASSIFIER
-                          Path to the Garnett classifier rds file for cell type
-                          prediction. Default: skip cell type prediction
-    --cellcycle CELLCYCLE
-                          Path to the TSV/CSV file with cell cycle data. First
-                          column - 'phase', second column 'gene_id'. Default:
-                          skip cell cycle score assignment
-    --barcodes BARCODES   Path to the headerless TSV/CSV file with selected
-                          barcodes (one per line) to prefilter input feature-
-                          barcode matrices. Default: use all cells
-    --mincells MINCELLS   Include features detected in at least this many cells
-                          (applied to thoughout all datasets together). Default:
-                          10
-    --minfeatures MINFEATURES
-                          Include cells where at least this many features are
-                          detected. Default: 250
-    --maxfeatures MAXFEATURES
-                          Include cells with the number of features not bigger
-                          than this value. Default: 5000
-    --minumi MINUMI       Include cells where at least this many UMI are
-                          detected. Default: 500
-    --minnovelty MINNOVELTY
-                          Include cells with the novelty score not lower than
-                          this value (calculated as log10(genes)/log10(UMIs)).
-                          Default: 0.8
-    --maxmt MAXMT         Include cells with the mitochondrial contamination
-                          percentage not bigger than this value. Default: 5
-    --mitopattern MITOPATTERN
-                          Regex pattern to identify mitochondrial reads.
-                          Default: ^Mt-
-    --features [FEATURES [FEATURES ...]]
-                          Features to explore in the clustered filtered
-                          integrated datasets. Default: do not highlight any
-                          features
-    --regresscellcycle    Regress cell cycle as a confounding source of
-                          variation. Default: false
-    --regressmt           Regress mitochondrial gene expression as a confounding
-                          source of variation. Default: false
-    --highvarcount HIGHVARCOUNT
-                          Number of higly variable features to detect. Default:
-                          3000
-    --ndim NDIM           Number of principal components to use in clustering
-                          (1:50). Use Elbow plot to adjust this parameter.
-                          Default: 10
-    --resolution [RESOLUTION [RESOLUTION ...]]
-                          Clustering resolution. Can be set as array. Default:
-                          0.4 0.6 0.8 1.0 1.4
-    --logfc LOGFC         Log fold change threshold for conserved gene markers
-                          identification. Default: 0.25
-    --minpct MINPCT       Minimum fraction of cells where genes used for
-                          conserved gene markers identification should be
-                          detected in either of two tested clusters. Default:
-                          0.1
-    --onlypos             Return only positive markers when running conserved
-                          gene markers identification. Default: false
-    --testuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}
-                          Set test type to use for putative and conserved gene
-                          marker identification. Default: wilcox
-    --species {hs,mm,none}
-                          Select species for gene name conversion when running
-                          cell type prediction with Garnett classifier. Default:
-                          do not convert gene names
-    --pdf                 Export plots in PDF. Default: false
-    --rds                 Save Seurat data to RDS file. Default: false
-    --output OUTPUT       Output prefix. Default: ./seurat
-    --threads THREADS     Threads. Default: 1

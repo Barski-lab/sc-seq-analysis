@@ -139,9 +139,9 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "cellbrowser-build-cellranger"
-s:name: "cellbrowser-build-cellranger"
-s:alternateName: "cellbrowser-build-cellranger"
+label: "Cell Ranger to UCSC Cell Browser"
+s:name: "Cell Ranger to UCSC Cell Browser"
+s:alternateName: "Exports Cell Ranger Count and Aggr resutls into compatible with UCSC Cell Browser format"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellbrowser-build-cellranger.cwl
 s:codeRepository: https://github.com/Barski-lab/workflows
@@ -179,47 +179,7 @@ s:creator:
 
 
 doc: |
-  Converts Cellranger outputs into the data structure supported by UCSC CellBrowser
-
-
-s:about: |
-  Usage: cbImportCellranger [options] -i cellRangerDir -o outputDir - convert the cellranger output to cellbrowser format and create a cellranger.conf file
-  Options:
-    -h, --help            show this help message and exit
-    -d, --debug           show debug messages
-    -i INDIR, --inDir=INDIR
-                          input folder with the cellranger analysis output. This
-                          is the directory with the two directories 'analysis'
-                          and 'filtered_gene_bc_matrices'
-    -o OUTDIR, --outDir=OUTDIR
-                          output directory
-    -n DATASETNAME, --name=DATASETNAME
-                          name of the dataset. No spaces or special characters.
-    -m, --noMat           do not export the matrix again, saves some time if you
-                          changed something small since the last run
-
-
-  Usage: cbBuild [options] -i cellbrowser.conf -o outputDir - add a dataset to the single cell viewer directory
-      If you have previously built into the same output directory with the same dataset and the
-      expression matrix has not changed its filesize, this will be detected and the expression
-      matrix will not be copied again. This means that an update of a few meta data attributes
-      is quite quick.
-  Options:
-    -h, --help            show this help message and exit
-    --init                copy sample cellbrowser.conf and desc.conf to current
-                          directory
-    -d, --debug           show debug messages
-    -i INCONF, --inConf=INCONF
-                          a cellbrowser.conf file that specifies labels and all
-                          input files, default is ./cellbrowser.conf, can be
-                          specified multiple times
-    -o OUTDIR, --outDir=OUTDIR
-                          output directory, default can be set through the env.
-                          variable CBOUT or ~/.cellbrowser.conf, current value:
-                          none
-    -p PORT, --port=PORT  if build is successful, start an http server on this
-                          port and serve the result via http://localhost:port
-    -r, --recursive       run in all subdirectories of the current directory.
-                          Useful when rebuilding a full hierarchy.
-    --redo=REDO           do not use cached old data. Can be: 'meta' or 'matrix'
-                          (matrix includes meta). 
+  Cell Ranger to UCSC Cell Browser
+  ================================
+  
+  Exports Cell Ranger Count and Aggr resutls into compatible with UCSC Cell Browser format.
