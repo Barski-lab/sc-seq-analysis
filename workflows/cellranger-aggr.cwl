@@ -285,3 +285,5 @@ s:creator:
 doc: |
   Cell Ranger Aggregate
   =====================
+
+  Aggregates data from multiple Cell Ranger Count Gene Expression experiments

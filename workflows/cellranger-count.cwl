@@ -31,13 +31,11 @@ inputs:
 
   fastq_file_r1:
     type: File
-    format: "http://edamontology.org/format_1930"
     label: "FASTQ file R1 (optionally compressed)"
     doc: "FASTQ file R1 (optionally compressed)"
 
   fastq_file_r2:
     type: File
-    format: "http://edamontology.org/format_1930"
     label: "FASTQ file R2 (optionally compressed)"
     doc: "FASTQ file R2 (optionally compressed)"
 
@@ -434,3 +432,5 @@ s:creator:
 doc: |
   Cell Ranger Count Gene Expression
   =================================
+
+  Counts gene expression for a single library.

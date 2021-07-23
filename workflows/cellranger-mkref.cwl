@@ -19,13 +19,11 @@ inputs:
 
   genome_fasta_file:
     type: File
-    format: "http://edamontology.org/format_1929"
     label: "Reference genome FASTA file"
     doc: "Reference genome FASTA file that includes all chromosomes"
 
   annotation_gtf_file:
     type: File
-    format: "http://edamontology.org/format_2306"
     label: "Reference genome GTF annotation file"
     doc: "GTF annotation file that includes refGene and mitochondrial DNA annotations"
 
@@ -219,3 +217,6 @@ s:creator:
 doc: |
   Cell Ranger Build Reference Indices
   ===================================
+
+  Builds reference genome indices for Cell Ranger Gene Expression and
+  Cell Ranger Multiome ATAC + Gene Expression experiments.
