@@ -1,5 +1,15 @@
 # Bioinformatics analysis of scRNA-Seq data
 
+## Table of Contents
+  1. [Create a new project and attach workflows](#step-1-create-a-new-project-and-attach-workflows)
+  2. [Build Cell Ranger reference indices](#step-2-build-cell-ranger-reference-indices)
+  3. [Quantify gene expression](#step-3-quantify-gene-expression)
+  4. [Aggregate cell by gene data from multiple samples](#step-4-aggregate-cell-by-gene-data-from-multiple-samples)
+  5. [Cluster and identify gene markers](#step-5-cluster-and-identify-gene-markers)
+  6. [Explore clustering results](#step-6-explore-clustering-results)
+
+--------
+
 To describe the use case scenario for our workflows we would like to refer to the **[Cholesterol Pathway Inhibition Induces TGF-beta Signaling to Promote Basal Differentiation in Pancreatic Cancer](https://pubmed.ncbi.nlm.nih.gov/32976774/)** paper (Gabitova-Cornell et al., 2020).
 
 In the original paper, analysis of scRNA-Seq data was conducted by manual command line and R processing. However, due to potential changes in tool versions, libraries and execution environments simply repeating the sequence of commands used in processing is likely to produce different results for different users. In order to guarantee the reproducibility and portability of our analytic approach, we converted our analysis into reproducible **Common Workflow Language** ([CWL](https://arxiv.org/abs/2105.07028)) pipelines and executed them on user-friendly **Scientific Data Analysis Platform** ([SciDAP](https://scidap.com)).
