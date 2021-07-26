@@ -1,6 +1,6 @@
 # Bioinformatics analysis of scRNA-Seq data
 
-To describe the use case scenario for our workflows we would like to refer to the **Cholesterol Pathway Inhibition Induces TGF-beta Signaling to Promote Basal Differentiation in Pancreatic Cancer** paper [(Gabitova-Cornell et al., 2020)]((https://pubmed.ncbi.nlm.nih.gov/32976774/)).
+To describe the use case scenario for our workflows we would like to refer to the **[Cholesterol Pathway Inhibition Induces TGF-beta Signaling to Promote Basal Differentiation in Pancreatic Cancer](https://pubmed.ncbi.nlm.nih.gov/32976774/)** paper (Gabitova-Cornell et al., 2020).
 
 In the original paper, analysis of scRNA-Seq data was conducted by manual command line and R processing. However, due to potential changes in tool versions, libraries and execution environments simply repeating the sequence of commands used in processing is likely to produce different results for different users. In order to guarantee the reproducibility and portability of our analytic approach, we converted our analysis into reproducible **Common Workflow Language** ([CWL](https://arxiv.org/abs/2105.07028)) pipelines and executed them on user-friendly **Scientific Data Analysis Platform** ([SciDAP](https://scidap.com)).
 
