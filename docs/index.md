@@ -115,6 +115,7 @@ The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijala
 *For Seurat Cluster workflow (A) the file defining sample groups can be uploaded though the experiment entry form (D,E). In case it is not provided each dataset will be assigned to its own separate group. The default filtering and clustering parameters can be adjusted on the Advanced tab (C).*
 
 ***Table 1. Advanced filtering, clustering and gene markers identification parameters***
+
 | Parameter | Default | Adjusted |
 |---|---|---|
 | Include genes detected in at least this many cells | 10 | 10 |
@@ -149,6 +150,7 @@ The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijala
 *<sup>6</sup> Genes of biological interest can be selected for plotting.*
 
 ***Table 2. Comma-separated condition.csv file to define datasets grouping***
+
 | library_id | condition |
 |---|---|
 | KPPC 1 SRR12450154 | KPPC |
