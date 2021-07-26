@@ -5,7 +5,7 @@
 
 This repository contains CWL pipelines for scRNA-Seq data analysis. Each of the used command line tools was wrapped into CWL format and combined into the workflows.
 
-![](./docs/images/figure_1.png)
+![](./docs/images/readme/figure_1.png)
 
 **Used tools:**
 - [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/overview/welcome) 4.0.0
