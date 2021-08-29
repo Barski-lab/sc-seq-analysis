@@ -127,6 +127,9 @@ The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijala
 | Pattern to identify mitochondrial genes | ^Mt- | ^mt-<sup>2</sup> |
 | Number of highly variable genes to detect (used for dataset integration and dimensional reduction) | 3000 | 3000 |
 | Number of principal components to use in UMAP projection and clustering (from 1 to 50) | 10 | 20<sup>3</sup> |
+| The effective scale of embedded points on UMAP. In combination with the parameter below determines how clustered/clumped the embedded points are. | 1 | 1 |
+| Controls how tightly the embedding is allowed compress points together on UMAP. Larger values ensure embedded points are more evenly distributed, while smaller values allow the algorithm to optimise more accurately with regard to local structure. Sensible values are in the range 0.001 to 0.5. | 0.3 | 0.3 |
+| Determines the number of neighboring points used in UMAP. Larger values will result in more global structure being preserved at the loss of detailed local structure. In general this parameter should often be in the range 5 to 50. | 30 | 30 |
 | Regress cell cycle as a confounding source of variation | False | False |
 | Regress mitochondrial gene expression as a confounding source of variation | False | False |
 | Clustering resolution | 0.1 | 0.5<sup>4</sup> |
@@ -155,9 +158,9 @@ The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijala
 |---|---|
 | KPPC 1 SRR12450154 | KPPC |
 | KPPC 2 SRR12450155 | KPPC |
+| KPPCN 2 SRR12450158 | KPPCN |
 | KPPC 3 SRR12450156 | KPPC |
 | KPPCN 1 SRR12450157 | KPPCN |
-| KPPCN 2 SRR12450158 | KPPCN |
 
 ## **Step 6.** Explore clustering results
 
@@ -171,7 +174,7 @@ Cell Ranger Count Gene Expression pipeline uses advanced cell-calling algorithm 
 ![](./images/tutorial/figure_7.jpg)
 ***Figure 7. QC metrics for not filtered merged datasets***
 
-*Genes per cell density distribution plot (C) is split into KPPC and KPPCN groups. Zoomed in section of the density plot (D) displays all 5 datasets within the selected boundaries. Cell rank plot (E) displays cells sorted by gene per cell counts within each dataset. The lower and upper limits for genes per cell values are shown as red and green lines correspondingly. On the genes per cell over UMIs per cell correlation plot (F) a vertical red line indicates the minimum threshold for UMIs per cell values. All the cells with the percentage of transcripts mapped to mitochondrial genes below 5% are marked as blue.*
+*Genes per cell density distribution plot (C) is split into KPPC and KPPCN groups. Zoomed in section of the density plot (D) displays all 5 datasets within the selected boundaries. Cell rank plot (E) displays cells sorted by gene per cell counts within each dataset. The lower and upper limits for genes per cell values are shown for each dataset separately. On the genes per cell over UMIs per cell correlation plot (F) the vertical lines indicate the minimum thresholds for UMIs per cell values. All the cells with the percentage of transcripts mapped to the mitochondrial genes below 5% are marked as blue.*
 
 - A combined effect of filtering by UMI counts, gene counts, and by the percentage of mitochondrial reads is shown on the genes per cell over UMIs per cell correlation plot (Figure 8A). The plot displays the remaining cells after all QC filters have been applied.
 - The Elbow plot (Figure 8B) is used to evaluate the dimensionality of the filtered integrated datasets by selecting only those principal components that capture the majority of the data variation. Typically, it is defined by the principal component after which the plot starts to plateau.
@@ -198,7 +201,7 @@ Cell Ranger Count Gene Expression pipeline uses advanced cell-calling algorithm 
 
 *Depending on the option selected on the Annotation tab, UCSC Cell Browser highlights identified clusters (A), groups datasets by specified condition (B), colors cells based on the percentage of mitochondrial genes expressed (C), and generates a barcodes list for a selected group of cells (D).*
 
-- On the **Putative gene markers** tab (Figure 11A) an interactive table includes gene markers for each cluster. The column names correspond to the output of [FindAllMarkers](https://www.rdocumentation.org/packages/Seurat/versions/4.0.3/topics/FindAllMarkers) function Seurat 4.0.1 R package. On the **Files** tab (Figure 11B) the list of all generated files is available for download. Among these files the **seurat_clst_data_rds.rds** (Figure 11C) includes Seurat clustering data in a format compatible with RStudio.
+- On the **Putative gene markers** tab (Figure 11A) an interactive table includes gene markers for each cluster. The column names correspond to the output of [FindAllMarkers](https://www.rdocumentation.org/packages/Seurat/versions/4.0.3/topics/FindAllMarkers) function Seurat 4.0.3 R package. On the **Files** tab (Figure 11B) the list of all generated files is available for download. Among these files the **seurat_clst_data_rds.rds** (Figure 11C) includes Seurat clustering data in a format compatible with RStudio.
 
 ![](./images/tutorial/figure_11.jpg)
 ***Figure 11. Gene markers identification and direct download of workflow execution results***
