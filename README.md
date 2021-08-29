@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.com/Barski-lab/scRNA-Seq-Analysis.svg?branch=main)](https://travis-ci.com/Barski-lab/scRNA-Seq-Analysis)
+[![Build Status](https://app.travis-ci.com/Barski-lab/scRNA-Seq-Analysis.svg?branch=main)](https://app.travis-ci.com/Barski-lab/scRNA-Seq-Analysis)
+[![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)](https://www.python.org/downloads/release/python-38/)
 # scRNA-Seq-Analysis
 
 **For detailed tutorial on how to use this set of workflows refer to the [Documenation](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
