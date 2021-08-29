@@ -1,5 +1,7 @@
 [![Build Status](https://app.travis-ci.com/Barski-lab/scRNA-Seq-Analysis.svg?branch=main)](https://app.travis-ci.com/Barski-lab/scRNA-Seq-Analysis)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)](https://www.python.org/downloads/release/python-38/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5315022.svg)](https://doi.org/10.5281/zenodo.5315022)
+
 # scRNA-Seq-Analysis
 
 **For detailed documentation on how to use this set of workflows in SciDAP refer to the [Tutorials](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
