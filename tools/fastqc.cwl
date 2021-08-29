@@ -161,7 +161,7 @@ s:name: "FastQC"
 s:alternateName: "Runs FastQC for quality control checks of input FASTQ file"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/fastqc.cwl
-s:codeRepository: https://github.com/Barski-lab/workflows
+s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

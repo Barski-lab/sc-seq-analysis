@@ -144,7 +144,7 @@ s:name: "Cell Ranger to UCSC Cell Browser"
 s:alternateName: "Exports Cell Ranger Count and Aggr resutls into compatible with UCSC Cell Browser format"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellbrowser-build-cellranger.cwl
-s:codeRepository: https://github.com/Barski-lab/workflows
+s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

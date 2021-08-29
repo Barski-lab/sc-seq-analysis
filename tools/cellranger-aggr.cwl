@@ -177,7 +177,7 @@ s:name: "Cell Ranger Aggregate"
 s:alternateName: "Produces a single feature-barcode matrix from the results of multiple Cell Ranger Count runs"
 
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-aggr.cwl
-s:codeRepository: https://github.com/Barski-lab/workflows
+s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

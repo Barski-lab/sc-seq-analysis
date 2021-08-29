@@ -9,85 +9,51 @@ requirements:
   - class: MultipleInputFeatureRequirement
 
 
-'sd:upstream':
-  genome_indices:
-    - "cellranger-mkref.cwl"
-
-
 inputs:
-
-  alias:
-    type: string
-    label: "Experiment short name/Alias"
-    sd:preview:
-      position: 1
 
   indices_folder:
     type: Directory
-    label: "Genome Type"
     doc: "Cell Ranger generated genome indices folder"
-    'sd:upstreamSource': "genome_indices/indices_folder"
-    'sd:localLabel': true
 
   fastq_file_r1:
     type: File
-    label: "FASTQ file R1 (optionally compressed)"
     doc: "FASTQ file R1 (optionally compressed)"
 
   fastq_file_r2:
     type: File
-    label: "FASTQ file R2 (optionally compressed)"
     doc: "FASTQ file R2 (optionally compressed)"
 
   expect_cells:
     type: int?
     default: 3000
-    label: "Expected number of recovered cells"
     doc: "Expected number of recovered cells"
-    'sd:layout':
-      advanced: true
 
   force_expect_cells:
     type: boolean?
     default: false
-    label: "Force pipeline to use the expected number of recovered cells"
     doc: |
       Force pipeline to use the expected number of recovered cell.
-      The value provided in expect_cells will be sent to Cell Ranger Count as --force-cells.
-      The latter will bypass the cell detection algorithm. Use this if the number of cells
-      estimated by Cell Ranger is not consistent with the barcode rank plot.
-    'sd:layout':
-      advanced: true
+      The value provided in expect_cells will be sent to Cell Ranger
+      Count as --force-cells. The latter will bypass the cell detection
+      algorithm. Use this if the number of cells estimated by Cell Ranger
+      is not consistent with the barcode rank plot.
 
   include_introns:
     type: boolean?
     default: false
-    label: "Count reads mapping to intronic regions. For samples with a significant amount of pre-mRNA molecules, such as nuclei"
     doc: |
-      Add this flag to count reads mapping to intronic regions.
-      This may improve sensitivity for samples with a significant
-      amount of pre-mRNA molecules, such as nuclei.
-    'sd:layout':
-      advanced: true
+      Count reads mapping to intronic regions. This may improve sensitivity
+      for samples with a significant amount of pre-mRNA molecules, such as nuclei.
 
   threads:
     type: int?
     default: 4
-    label: "Number of threads"
     doc: "Number of threads for those steps that support multithreading"
-    'sd:layout':
-      advanced: true
 
   memory_limit:
     type: int?
-    default: 30
-    label: "Genome Type"
-    doc: |
-      Maximum memory used (GB).
-      The same as was used for generating indices.
-      The same will be applied to virtual memory
-    'sd:upstreamSource': "genome_indices/memory_limit"
-    'sd:localLabel': true
+    default: 20
+    doc: "Maximum memory used (GB). The same will be applied to virtual memory"
 
 
 outputs:
@@ -95,152 +61,92 @@ outputs:
   fastqc_report_fastq_r1:
     type: File
     outputSource: run_fastqc_for_fastq_r1/html_file
-    label: "FastqQC report for FASTQ file R1"
-    doc: |
-      FastqQC report for FASTQ file R1
-    'sd:visualPlugins':
-    - linkList:
-        tab: 'Overview'
-        target: "_blank"
+    doc: "FastqQC report for FASTQ file R1"
 
   fastqc_report_fastq_r2:
     type: File
     outputSource: run_fastqc_for_fastq_r2/html_file
-    label: "FastqQC report for FASTQ file R2"
-    doc: |
-      FastqQC report for FASTQ file R2
-    'sd:visualPlugins':
-    - linkList:
-        tab: 'Overview'
-        target: "_blank"
+    doc: "FastqQC report for FASTQ file R2"
 
   web_summary_report:
     type: File
     outputSource: generate_counts_matrix/web_summary_report
-    label: "Cell Ranger summary"
-    doc: |
-      Cell Ranger summary
-    'sd:visualPlugins':
-    - linkList:
-        tab: 'Overview'
-        target: "_blank"
+    doc: "Cell Ranger summary"
 
   metrics_summary_report:
     type: File
     outputSource: generate_counts_matrix/metrics_summary_report
-    label: "Run summary metrics in CSV format"
-    doc: |
-      Run summary metrics in CSV format
+    doc: "Run summary metrics in CSV format"
 
   possorted_genome_bam_bai:
     type: File
     outputSource: generate_counts_matrix/possorted_genome_bam_bai
-    label: "Aligned to the genome indexed reads BAM+BAI files"
-    doc: |
-      Indexed reads aligned to the genome and transcriptome annotated
-      with barcode information
+    doc: "Aligned to the genome indexed reads BAM+BAI files"
 
   filtered_feature_bc_matrix_folder:
     type: File
     outputSource: compress_filtered_feature_bc_matrix_folder/compressed_folder
-    label: "Compressed folder with filtered feature-barcode matrices"
-    doc: |
-      Compressed folder with filtered feature-barcode matrices containing only cellular barcodes in MEX format.
-      When implemented, in Targeted Gene Expression samples, the non-targeted genes won't be present.
+    doc: "Compressed folder with filtered feature-barcode matrices in MEX format"
 
   filtered_feature_bc_matrix_h5:
     type: File
     outputSource: generate_counts_matrix/filtered_feature_bc_matrix_h5
-    label: "Filtered feature-barcode matrices in HDF5 format"
-    doc: |
-      Filtered feature-barcode matrices containing only cellular barcodes in HDF5 format.
-      When implemented, in Targeted Gene Expression samples, the non-targeted genes won't
-      be present.
+    doc: "Filtered feature-barcode matrices in HDF5 format"
   
   raw_feature_bc_matrices_folder:
     type: File
     outputSource: compress_raw_feature_bc_matrices_folder/compressed_folder
-    label: "Compressed folder with unfiltered feature-barcode matrices"
-    doc: |
-      Compressed folder with unfiltered feature-barcode matrices containing all barcodes in MEX format
+    doc: "Compressed folder with unfiltered feature-barcode matrices in MEX format"
 
   raw_feature_bc_matrices_h5:
     type: File
     outputSource: generate_counts_matrix/raw_feature_bc_matrices_h5
-    label: "Unfiltered feature-barcode matrices in HDF5 format"
-    doc: |
-      Unfiltered feature-barcode matrices containing all barcodes in HDF5 format
+    doc: "Unfiltered feature-barcode matrices in HDF5 format"
 
   secondary_analysis_report_folder:
     type: File
     outputSource: compress_secondary_analysis_report_folder/compressed_folder
-    label: "Compressed folder with secondary analysis results"
-    doc: |
-      Compressed folder with secondary analysis results including dimensionality reduction,
-      cell clustering, and differential expression
+    doc: "Compressed folder with secondary analysis results"
 
   molecule_info_h5:
     type: File
     outputSource: generate_counts_matrix/molecule_info_h5
-    label: "Molecule-level information for aggregating samples into larger datasets"
-    doc: |
-      Molecule-level information used by cellranger aggr to aggregate samples into
-      larger datasets
+    doc: "Molecule-level information for aggregating samples into larger datasets"
 
   loupe_browser_track:
-    outputSource: generate_counts_matrix/loupe_browser_track
-    label: "Loupe Browser visualization and analysis file"
     type: File
-    doc: |
-      Loupe Browser visualization and analysis file
+    outputSource: generate_counts_matrix/loupe_browser_track
+    doc: "Loupe Browser visualization and analysis file"
 
   collected_statistics:
     type: File
     outputSource: collect_statistics/collected_statistics
-    label: "Collected statistics in Markdown format"
     doc: "Collected statistics in Markdown format"
-    'sd:visualPlugins':
-    - markdownView:
-        tab: 'Overview'
 
   generate_counts_matrix_stdout_log:
     type: File
     outputSource: generate_counts_matrix/stdout_log
-    label: stdout log generated by cellranger count
-    doc: |
-      stdout log generated by cellranger count
+    doc: "Stdout log generated by cellranger count"
 
   generate_counts_matrix_stderr_log:
     type: File
     outputSource: generate_counts_matrix/stderr_log
-    label: stderr log generated by cellranger count
-    doc: |
-      stderr log generated by cellranger count
+    doc: "Stderr log generated by cellranger count"
 
   compressed_html_data_folder:
     type: File
     outputSource: compress_html_data_folder/compressed_folder
-    label: "Compressed folder with CellBrowser formatted results"
-    doc: |
-      Compressed folder with CellBrowser formatted results
+    doc: "Compressed folder with CellBrowser formatted results"
 
   html_data_folder:
     type: Directory
     outputSource: cellbrowser_build/html_data
-    label: "Folder with not compressed CellBrowser formatted results"
-    doc: |
-      Folder with not compressed CellBrowser formatted results
+    doc: "Folder with not compressed CellBrowser formatted results"
 
   cellbrowser_report:
     type: File
     outputSource: cellbrowser_build/index_html_file
-    label: "CellBrowser formatted Cellranger report"
-    doc: |
-      CellBrowser formatted Cellranger report
-    'sd:visualPlugins':
-    - linkList:
-        tab: 'Overview'
-        target: "_blank"
+    doc: "CellBrowser formatted Cellranger report"
 
 
 steps:
