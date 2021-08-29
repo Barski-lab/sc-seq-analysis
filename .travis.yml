@@ -3,19 +3,20 @@ os:
 - linux
 
 language: python
-python:
-- 3.6
-- 3.7
-- 3.8
-- 3.9
 
 jobs:
   include:
   - name: Fixed version of cwltool
+    python:
+    - 3.8
+    - 3.9
     install:
     - pip install --upgrade cwltool==3.0.20200710214758
     script: cd ./workflows && ls | xargs -n 1 cwltool --validate
   - name: Latest version of cwltool
+    python:
+    - 3.8
+    - 3.9
     install:
     - pip install --upgrade cwltool
     script: cd ./workflows && ls | xargs -n 1 cwltool --validate
