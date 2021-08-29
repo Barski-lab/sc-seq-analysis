@@ -12,11 +12,11 @@ requirements:
           function get_unique(value, index, self) {
             return self.indexOf(value) === index && value != "";
           }
-          let splitted_line = line?line.split(/[\s,]+/).filter(get_unique):null;
+          var splitted_line = line?line.split(/[\s,]+/).filter(get_unique):null;
           return (splitted_line && !!splitted_line.length)?splitted_line:null;
       };
     - var split_numbers = function(line) {
-          let splitted_line = line?line.split(/[\s,]+/).map(parseFloat):null;
+          var splitted_line = line?line.split(/[\s,]+/).map(parseFloat):null;
           return (splitted_line && !!splitted_line.length)?splitted_line:null;
       };
 
