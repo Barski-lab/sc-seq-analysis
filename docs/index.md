@@ -28,21 +28,23 @@ In SciDAP, projects keep data organized by the study. Attaching workflows to pro
   - Cell Ranger Count Gene Expression
   - Cell Ranger Aggregate
   - Seurat Cluster
+- Click the **Save** button at the top right corner of the screen.
 
 ![](./images/tutorial/figure_1.jpg)
 ***Figure 1. Creating a new project for scRNA-Seq data analysis***
 
-*Setting project title and subtitle helps to distinguish it from the other projects (A). A detailed project description can be added as a Markdown-formatted text (B). Since there are many ways to process the same data, only workflows that have been attached to the project can be used for data analyses to ensure that samples are directly comparable(C). The list of available workflows can be edited after project creation as well.*
+*Setting project title and subtitle helps to distinguish it from the other projects (A). A detailed project description can be added as a Markdown-formatted text (B). Since there are many ways to process the same data, only workflows that have been attached to the project can be used for data analyses to ensure that samples are directly comparable(C). The list of available workflows can be edited after project creation as well*
 
 ## **Step 2.** Build Cell Ranger reference indices
 
 To build reference genome indices [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) runs [STAR](https://github.com/alexdobin/STAR). Genome indices are used to make alignment algorithm fast and efficient. For Cell Ranger both genome sequences ([FASTA](https://software.broadinstitute.org/software/igv/FASTA)) and gene annotation ([GTF](https://software.broadinstitute.org/software/igv/GFF)) files should be provided. The gene annotation file is required for splice junction extraction which improves mapping accuracy of scRNA-Seq data. More details about preparing genome references for Cell Ranger can be found in the official 10X Genomics [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_mr).
 
+- Enter newly created project.
 - Create a new experiment by clicking the **Add sample** button on the **Sample** tab.
 - Select **Cell Ranger Build Reference Indices** workflow from the **Experiment type** dropdown menu (Figure 2A).
 - On the **General info** tab set an arbitrary **Experiment short name** to distinguish the newly created sample from the others. Select **Mus Musculus (mm10)** genome from the **Genome type** dropdown menu (Figure 2B). Optionally, add detailed experiment description in the **Details** section (Figure 2C). SciDAP already has the genome and annotation in its database and they will be used for indexing.
 - Click the **Save sample** button at the bottom of the screen.
-- Proceed to the next step after building Cell Ranger reference indices finished successfully.
+- Proceed to the next step after building Cell Ranger reference indices finished successfully. If the analysis failed SciDAP displays an error marker with the percentage and the name of the last executed workflow step on the right side from the failed experiment on the Sample tab. SciDAP will not allow using failed experiments for further analyses.
 
 ![](./images/tutorial/figure_2.jpg)
 ***Figure 2. Building Cell Ranger reference indices***
@@ -53,6 +55,7 @@ To build reference genome indices [Cell Ranger](https://support.10xgenomics.com/
 
 Cell Ranger gene expression quantification starts with read trimming (for Single Cell 3’ Gene Expression) and running STAR for splice-aware read alignment. Only the reads that are uniquely mapped to transcriptome are used for analysis. PCR duplicate reads are removed based on Unique Molecular Identifiers (UMI). Cell Ranger supports automatic sequencing error corrections in UMIs, that allows to save more reads. The unique reads that have valid cell barcodes and UMIs, and that are mapped to exactly one gene are used to create cell by gene matrix. More details about Cell Ranger gene expression quantification algorithm can be found in the official [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/algorithms/overview).
 
+- Enter project where the sample with the Cell Ranger reference indices was created.
 - Create a new experiment by clicking the **Add sample** button on the **Sample** tab.
 - Select **Cell Ranger Count Gene Expression** workflow from the **Experiment type** dropdown menu (Figure 3A).
  - On the **General info** tab set an arbitrary **Experiment short name** to distinguish the newly created sample from the others. Select the experiment with the Cell Ranger reference indices from the **Genome type** dropdown menu (Figure 3B). Optionally, add detailed experiment description in the **Details** section.
@@ -61,7 +64,7 @@ Cell Ranger gene expression quantification starts with read trimming (for Single
 - Provide the same SRR run accession number when clicking the **Use File Manager** button under the **FASTQ file R2** label.
 - Click the **Save sample** button at the bottom of the screen.
 - Repeat the same steps for each experiment to be analyzed (e.g. every SRX run in the  **PRJNA657051** BioProject). **KPPC 1 SRR12450154** dataset is shown as an example. To obtain a list of required SRR run accession numbers open https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA657051 (Figure 4A) and copy SRR identifiers for each of the SRX experiments (Figure 4B).
-- Proceed to the next step after gene expression quantification finished successfully for all five datasets.
+- Proceed to the next step after gene expression quantification finished successfully for all five datasets. SciDAP will not allow saving an experiment that references failed sample. User will be notified with the correspondent warning message about missing upstream analysis.
 
 If sequence data from the multiple SRR runs belong to the same SRX experiment and should be processed as a single sample, SRR run accession numbers should be provided in a form of comma-separated list. In addition to downloading from NCBI SRA, **Attach from URL** tab also supports direct URLs to the FASTQ files deposited to other repositories. Alternatively, input FASTQ files can be uploaded from the user’s computer using **File Manager** tab or downloaded from the FTP server through **FTP Connection** tab.
 
@@ -81,6 +84,7 @@ The results of each successfully finished gene expression quantification experim
 
 To proceed to the clustering analysis the results of all five gene expression quantification experiments should be merged into a single feature-barcode matrix. However, since for each scRNA-Seq experiment, cell barcodes were drawn from the same pool of whitelisted barcodes, a simple merging may result in having duplicated barcodes. To avoid this scenario Cell Ranger updates each barcode with an integer suffix pointing to the dataset the cell came from before running aggregation. Optionally, Cell Ranger may run depth normalization algorithm to make all merged datasets have similar number of uniquely mapped to transcriptome reads per cell. This approach may be suboptimal since all data will be downsampled to match the worst sample. Here we aggregate samples without normalization, leaving normalization to Seurat. More details about Cell Ranger aggregation algorithm can be found in the official [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/aggregate).
 
+- Enter project where the sample with the Cell Ranger reference indices was created.
 - Create a new experiment by clicking the **Add analysis** button on the **Analysis** tab.
 - Select **Cell Ranger Aggregate** workflow from the **Experiment type** dropdown menu (Figure 5A).
 - On the **General info** tab set an arbitrary **Experiment short name** to distinguish the newly created sample from the others. Select all five Cell Ranger Count Gene Expression experiments from the **scRNA-Seq Cell Ranger Experiment** dropdown menu (Figure 5B). Optionally, add detailed experiment description in the **Details** section.
@@ -99,6 +103,7 @@ The results of successfully finished gene expression aggregation experiment can 
 
 The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijalab.org/seurat/) starts with evaluation of common  single-cell quality control (QC) metrics – genes and UMIs counts, percentage of mitochondrial genes expressed. QC allows to get a general overview of the datasets quality as well as to define filtering thresholds for dead or low-quality cells removal. Filtered merged datasets are then being processed with the integration algorithm. Its main goal is to identify integration anchors – pairs of cells that can “pull together” the same cell type populations from the different datasets. An integration algorithm can also solve batch correction problem by regressing out the unwanted sources of variation. The integrated data then undergo the dimensionality reduction processing that starts from the principal component analysis (PCA). Based on the PCA results the uniform manifold approximation and projection (UMAP) and clustering analysis are run with the principal components of the highest variance. Clustered data are then used for gene markers identification. These genes are differentially expressed between clusters and can be used for cell types assignment. More details about scRNA-Seq integration analysis with Seurat can be found in the official [documentation](https://satijalab.org/seurat/articles/integration_introduction.html).
 
+- Enter project where the sample with the Cell Ranger reference indices was created.
 - Create a new experiment by clicking the **Add analysis** button on the **Analysis** tab.
 - Select **Seurat Cluster** workflow from the **Experiment type** dropdown menu (Figure 6A).
 - On the **General info** tab set an arbitrary **Experiment short name** to distinguish the newly created sample from the others. Select Cell Ranger Aggregate experiment from the **scRNA-Seq Cell Ranger Aggregate Experiment** dropdown menu (Figure 6B). Optionally, add detailed experiment description in the **Details** section.
@@ -174,7 +179,7 @@ Cell Ranger Count Gene Expression pipeline uses advanced cell-calling algorithm 
 ![](./images/tutorial/figure_7.jpg)
 ***Figure 7. QC metrics for not filtered merged datasets***
 
-*Genes per cell density distribution plot (C) is split into KPPC and KPPCN groups. Zoomed in section of the density plot (D) displays all 5 datasets within the selected boundaries. Cell rank plot (E) displays cells sorted by gene per cell counts within each dataset. The lower and upper limits for genes per cell values are shown for each dataset separately. On the genes per cell over UMIs per cell correlation plot (F) the vertical lines indicate the minimum thresholds for UMIs per cell values. All the cells with the percentage of transcripts mapped to the mitochondrial genes below 5% are marked as blue.*
+*Genes per cell density distribution plot (C) is split into KPPC and KPPCN groups. Zoomed in section of the density plot (D) displays all 5 datasets within the selected boundaries. Cell rank plot (E) displays cells sorted by gene per cell counts within each dataset. The lower and upper limits for genes per cell values are shown as red and green lines correspondingly. On the genes per cell over UMIs per cell correlation plot (F) a vertical red line indicates the minimum threshold for UMIs per cell values. All the cells with the percentage of transcripts mapped to mitochondrial genes below 5% are marked as blue.*
 
 - A combined effect of filtering by UMI counts, gene counts, and by the percentage of mitochondrial reads is shown on the genes per cell over UMIs per cell correlation plot (Figure 8A). The plot displays the remaining cells after all QC filters have been applied.
 - The Elbow plot (Figure 8B) is used to evaluate the dimensionality of the filtered integrated datasets by selecting only those principal components that capture the majority of the data variation. Typically, it is defined by the principal component after which the plot starts to plateau.
@@ -199,11 +204,11 @@ Cell Ranger Count Gene Expression pipeline uses advanced cell-calling algorithm 
 ![](./images/tutorial/figure_10.jpg)
 ***Figure 10. Clustering results visualized in UCSC Cell Browser (next page)***
 
-*Depending on the option selected on the Annotation tab, UCSC Cell Browser highlights identified clusters (A), groups datasets by specified condition (B), colors cells based on the percentage of mitochondrial genes expressed (C), and generates a barcodes list for a selected group of cells (D).*
+*Depending on the option selected on the Annotation tab, UCSC Cell Browser highlights identified clusters (A), groups datasets by specified condition (B), colors cells based on the expression of genes of interest (C), and generates a barcodes list for a selected group of cells (D).*
 
 - On the **Putative gene markers** tab (Figure 11A) an interactive table includes gene markers for each cluster. The column names correspond to the output of [FindAllMarkers](https://www.rdocumentation.org/packages/Seurat/versions/4.0.3/topics/FindAllMarkers) function Seurat 4.0.3 R package. On the **Files** tab (Figure 11B) the list of all generated files is available for download. Among these files the **seurat_clst_data_rds.rds** (Figure 11C) includes Seurat clustering data in a format compatible with RStudio.
 
 ![](./images/tutorial/figure_11.jpg)
 ***Figure 11. Gene markers identification and direct download of workflow execution results***
 
-*In the gene markers table, the values in **avg_log2FC** column are calculated as a log2 fold change difference between the average gene expression in the current cluster compared to all other clusters combined. The **pct.1** and **pct.2** columns show the percentage of cells with the specific gene expressed in the current cluster and all other clusters combined. This table can be used to identify gene markers of interest and assign cell types.*
+*In the gene markers table, the values in avg_log2FC column are calculated as a log2 fold change difference between the average gene expression in the current cluster compared to all other clusters combined. The pct.1 and pct.2 columns show the percentage of cells with the specific gene expressed in the current cluster and all other clusters combined. This table can be used to identify gene markers of interest and assign cell types.*
