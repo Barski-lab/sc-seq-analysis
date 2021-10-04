@@ -35,7 +35,7 @@ In SciDAP, projects keep data organized by the study. Attaching workflows to pro
 
 *Setting project title and subtitle helps to distinguish it from the other projects (A). A detailed project description can be added as a Markdown-formatted text (B). Since there are many ways to process the same data, only workflows that have been attached to the project can be used for data analyses to ensure that samples are directly comparable(C). The list of available workflows can be edited after project creation as well*
 
-## **Step 2.** Build Cell Ranger reference indices
+## [**Step 2.** Build Cell Ranger reference indices](https://scidap.com/public/workflows/k437XPbs2TBAkDNJJ)
 
 To build reference genome indices [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) runs [STAR](https://github.com/alexdobin/STAR). Genome indices are used to make alignment algorithm fast and efficient. For Cell Ranger both genome sequences ([FASTA](https://software.broadinstitute.org/software/igv/FASTA)) and gene annotation ([GTF](https://software.broadinstitute.org/software/igv/GFF)) files should be provided. The gene annotation file is required for splice junction extraction which improves mapping accuracy of scRNA-Seq data. More details about preparing genome references for Cell Ranger can be found in the official 10X Genomics [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_mr).
 
@@ -51,7 +51,7 @@ To build reference genome indices [Cell Ranger](https://support.10xgenomics.com/
 
 *After the user selects experiment type (A), they are presented with a form that allows to specify experiment/analysis parameters (B). SciDAP automatically creates these input forms based on CWL pipelines. Optional experiment details can be added as a Markdown-formatted text (C).*
 
-## **Step 3.** Quantify gene expression
+## [**Step 3.** Quantify gene expression](https://scidap.com/public/workflows/FjPRjyutmRAkJypym)
 
 Cell Ranger gene expression quantification starts with read trimming (for Single Cell 3’ Gene Expression) and running STAR for splice-aware read alignment. Only the reads that are uniquely mapped to transcriptome are used for analysis. PCR duplicate reads are removed based on Unique Molecular Identifiers (UMI). Cell Ranger supports automatic sequencing error corrections in UMIs, that allows to save more reads. The unique reads that have valid cell barcodes and UMIs, and that are mapped to exactly one gene are used to create cell by gene matrix. More details about Cell Ranger gene expression quantification algorithm can be found in the official [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/algorithms/overview).
 
@@ -80,7 +80,7 @@ The results of each successfully finished gene expression quantification experim
 
 *On NCBI SRA the raw sequencing data is saved in a form of SRA archives that can be accessed by their SRR run accession numbers. Multiple SRR runs can belong to the same SRX/GSM sample which in turn belongs to an SRP/GSE study. The same pages can be found through via GEO search.*
 
-## **Step 4.** Aggregate cell by gene data from multiple samples
+## [**Step 4.** Aggregate cell by gene data from multiple samples](https://scidap.com/public/workflows/8gRMRSZzeogaMcEYJ)
 
 To proceed to the clustering analysis the results of all five gene expression quantification experiments should be merged into a single feature-barcode matrix. However, since for each scRNA-Seq experiment, cell barcodes were drawn from the same pool of whitelisted barcodes, a simple merging may result in having duplicated barcodes. To avoid this scenario Cell Ranger updates each barcode with an integer suffix pointing to the dataset the cell came from before running aggregation. Optionally, Cell Ranger may run depth normalization algorithm to make all merged datasets have similar number of uniquely mapped to transcriptome reads per cell. This approach may be suboptimal since all data will be downsampled to match the worst sample. Here we aggregate samples without normalization, leaving normalization to Seurat. More details about Cell Ranger aggregation algorithm can be found in the official [documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/aggregate).
 
@@ -99,7 +99,7 @@ The results of successfully finished gene expression aggregation experiment can 
 
 *For Cell Ranger Aggregate workflow (A) setting library depth normalization to None (C) will disable the default behavior of normalizing the average read depth per cell between merged datasets (B). Normalization will be applied when integrating datasets with Seurat.*
 
-## **Step 5.** Cluster and identify gene markers
+## [**Step 5.** Cluster and identify gene markers](https://scidap.com/public/workflows/eR9AFDvT5hdGRDgAJ)
 
 The joint analysis of multiple scRNA-Seq datasets with [Seurat](https://satijalab.org/seurat/) starts with evaluation of common  single-cell quality control (QC) metrics – genes and UMIs counts, percentage of mitochondrial genes expressed. QC allows to get a general overview of the datasets quality as well as to define filtering thresholds for dead or low-quality cells removal. Filtered merged datasets are then being processed with the integration algorithm. Its main goal is to identify integration anchors – pairs of cells that can “pull together” the same cell type populations from the different datasets. An integration algorithm can also solve batch correction problem by regressing out the unwanted sources of variation. The integrated data then undergo the dimensionality reduction processing that starts from the principal component analysis (PCA). Based on the PCA results the uniform manifold approximation and projection (UMAP) and clustering analysis are run with the principal components of the highest variance. Clustered data are then used for gene markers identification. These genes are differentially expressed between clusters and can be used for cell types assignment. More details about scRNA-Seq integration analysis with Seurat can be found in the official [documentation](https://satijalab.org/seurat/articles/integration_introduction.html).
 
