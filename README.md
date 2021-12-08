@@ -3,6 +3,12 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5339177.svg)](https://doi.org/10.5281/zenodo.5339177)
 
 # scRNA-Seq-Analysis
+**Cite as:**
+
+*Aizhan Surumbayeva, Michael Kotliar, Linara Gabitova-Cornell, Andrey Kartashov, Suraj Peri, Nathan Salomonis, Artem Barski, Igor Astsaturov, Preparation of mouse pancreatic tumor for single-cell RNA sequencing and analysis of the data, STAR Protocols, Volume 2, Issue 4, 2021, 100989, ISSN 2666-1667,
+https://doi.org/10.1016/j.xpro.2021.100989*
+
+--------
 
 **For detailed documentation on how to use this set of workflows in SciDAP refer to the [Tutorials](https://barski-lab.github.io/scRNA-Seq-Analysis/) page.**
 
