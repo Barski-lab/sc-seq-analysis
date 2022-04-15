@@ -143,31 +143,32 @@ outputs:
     secondaryFiles:
     - .bai
     doc: |
-      Indexed reads aligned to the genome and transcriptome annotated with barcode information
+      Indexed reads aligned to the genome and transcriptome annotated
+      with barcode information
   
   filtered_feature_bc_matrix_folder:
     type: Directory
     outputBinding:
       glob: "sample/outs/filtered_feature_bc_matrix"
     doc: |
-      Folder with filtered feature-barcode matrices containing only cellular barcodes in MEX format.
-      When implemented, in Targeted Gene Expression samples, the non-targeted genes won't be present.
+      Folder with filtered feature-barcode matrices containing only
+      cellular barcodes in MEX format
 
   filtered_feature_bc_matrix_h5:
     type: File
     outputBinding:
       glob: "sample/outs/filtered_feature_bc_matrix.h5"
     doc: |
-      Filtered feature-barcode matrices containing only cellular barcodes in HDF5 format.
-      When implemented, in Targeted Gene Expression samples, the non-targeted genes won't
-      be present.
+      Filtered feature-barcode matrices containing only cellular barcodes
+      in HDF5 format
   
   raw_feature_bc_matrices_folder:
     type: Directory
     outputBinding:
       glob: "sample/outs/raw_feature_bc_matrix"
     doc: |
-      Folder with unfiltered feature-barcode matrices containing all barcodes in MEX format
+      Folder with unfiltered feature-barcode matrices containing all
+      barcodes in MEX format
 
   raw_feature_bc_matrices_h5:
     type: File
@@ -221,9 +222,9 @@ $schemas:
 
 label: "Cell Ranger Count Gene Expression"
 s:name: "Cell Ranger Count Gene Expression"
-s:alternateName: "Quantifies gene expression from a single scRNA-Seq library"
+s:alternateName: "Quantifies gene expression from a single-cell RNA-Seq library"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-count.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-count.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
@@ -260,18 +261,22 @@ s:creator:
 
 doc: |
   Cell Ranger Count Gene Expression
-  =================================
+  ==============================================================
   
-  Quantifies gene expression from a single scRNA-Seq library
+  Quantifies gene expression from a single-cell RNA-Seq library.
 
-  Input parameters for Feature Barcode, Targeted Gene Expression and CRISPR-specific
-  analyses are not implemented, therefore the correspondent outputs are also excluded.
+  Input parameters for Feature Barcode, Targeted Gene
+  Expression and CRISPR-specific analyses are not implemented,
+  therefore the correspondent outputs are also excluded.
 
   Parameters set by default:
-  --disable-ui - no need in any UI when running in Docker container
+  --disable-ui - no need in any UI when running in Docker
+    container
   --id - can be hardcoded as we rename input files anyway
-  --fastqs - points to the current directory, because input FASTQ files are staged there
+  --fastqs - points to the current directory, because input
+    FASTQ files are staged there
 
   Why do we need to rename input files?
-  Refer to the "My FASTQs are not named like any of the above examples" section of
+  Refer to the "My FASTQs are not named like any of the above
+  examples" section of
   https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/fastq-input

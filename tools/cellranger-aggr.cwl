@@ -174,9 +174,9 @@ $schemas:
 
 label: "Cell Ranger Aggregate"
 s:name: "Cell Ranger Aggregate"
-s:alternateName: "Produces a single feature-barcode matrix from the results of multiple Cell Ranger Count runs"
+s:alternateName: "Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-aggr.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-aggr.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
@@ -213,9 +213,9 @@ s:creator:
 
 doc: |
   Cell Ranger Aggregate
-  =====================
+  ===========================================================================
 
-  Produces a single feature-barcode matrix from the results of multiple Cell Ranger Count runs.
+  Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression.
 
   Parameters set by default:
   --disable-ui - no need in any UI when running in Docker container
@@ -236,5 +236,6 @@ doc: |
   --uiport
 
   Not supported features:
-  - Batch correction caused by different versions of the Single Cell Gene Expression chemistry is
-    not supported as the generated metadata file doesn't include "batch" field.
+  - Batch correction caused by different versions of the Single Cell Gene
+    Expression chemistry is not supported as the generated metadata file
+    doesn't include "batch" field.

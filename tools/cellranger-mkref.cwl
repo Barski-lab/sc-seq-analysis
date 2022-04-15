@@ -98,9 +98,9 @@ $schemas:
 
 label: "Cell Ranger Build Reference Indices"
 s:name: "Cell Ranger Build Reference Indices"
-s:alternateName: "Builds a Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files"
+s:alternateName: "Builds Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-mkref.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-mkref.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
@@ -137,7 +137,7 @@ s:creator:
 
 doc: |
   Cell Ranger Build Reference Indices
-  ===================================
+  ======================================================
   
-  Builds a Cell Ranger compatible reference folder from
-  the custom genome FASTA and gene GTF annotation files
+  Builds Cell Ranger compatible reference folder from
+  the custom genome FASTA and gene GTF annotation files.

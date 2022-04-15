@@ -118,9 +118,11 @@ $schemas:
 
 label: "Cell Ranger ARC Build Reference Indices"
 s:name: "Cell Ranger ARC Build Reference Indices"
-s:alternateName: "Builds a Cell Ranger ARC compatible reference folder from the custom genome FASTA and gene GTF annotation files"
+s:alternateName: |
+  Builds Cell Ranger ARC compatible reference folder from the
+  custom genome FASTA and gene GTF annotation files
                  
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/master/tools/cellranger-arc-mkref.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-arc-mkref.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
@@ -157,13 +159,14 @@ s:creator:
 
 doc: |
   Cell Ranger ARC Build Reference Indices
-  =======================================
+  ====================================================================
   
-  Builds a Cell Ranger ARC compatible reference folder from the
-  custom genome FASTA and gene GTF annotation files
+  Builds Cell Ranger ARC compatible reference folder from the custom
+  genome FASTA and gene GTF annotation files.
   
   Notes:
-  - `input_motifs` parameter in the `config.txt` file is not implemented.
-  - if GTF file provided in `annotation_gtf_file` has records with duplicate
-    gene_id, they should be grouped together. Applicable to to USCS RefGene
-    annotations.
+  - `input_motifs` parameter in the `config.txt` file is not
+    implemented.
+  - if GTF file provided in `annotation_gtf_file` has records with
+    duplicate gene_id, they should be grouped together. Applicable to
+    USCS RefGene annotations.

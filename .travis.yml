@@ -1,4 +1,4 @@
-dist: bionic
+dist: focal
 os:
 - linux
 
@@ -10,12 +10,12 @@ jobs:
     python: 3.8
     install:
     - pip install --upgrade cwltool==3.0.20200710214758
-    script: cd ./workflows && ls | xargs -n 1 cwltool --validate
+    script: find . -name "*.cwl" | xargs -n 1 cwltool --validate
   - name: Latest version of cwltool
     python: 3.8
     install:
     - pip install --upgrade cwltool
-    script: cd ./workflows && ls | xargs -n 1 cwltool --validate
+    script: find . -name "*.cwl" | xargs -n 1 cwltool --validate
 
 branches:
   only:

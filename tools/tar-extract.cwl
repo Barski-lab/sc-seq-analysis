@@ -13,29 +13,23 @@ hints:
 
 inputs:
 
-  folder_to_compress:
-    type: Directory
-    doc: "Folder to compressed"
+  file_to_extract:
+    type: File
+    inputBinding:
+      position: 1
+    doc: "File to extract"
 
 
 outputs:
 
-  compressed_folder:
-    type: File
+  extracted_folder:
+    type: Directory
     outputBinding:
       glob: "*"
-    doc: "Compressed folder"
+    doc: "Extracted folder"
 
 
-baseCommand: ["tar"]
-
-
-arguments:
-  - valueFrom: $(inputs.folder_to_compress.path.split("/").slice(0,-1).join("/"))
-    prefix: "-C"
-  - "-czvfh"
-  - valueFrom: $(inputs.folder_to_compress.basename + ".tar.gz")
-  - "."
+baseCommand: ["tar", "xzf"]
 
 
 $namespaces:
@@ -44,11 +38,11 @@ $namespaces:
 $schemas:
 - https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
-label: "TAR compress"
-s:name: "TAR compress"
-s:alternateName: "Creates compressed TAR file from a folder"
+label: "TAR extract"
+s:name: "TAR extract"
+s:alternateName: "Extracts the content of TAR file into a folder"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/tar-compress.cwl
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/tar-extract.cwl
 s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
@@ -84,7 +78,7 @@ s:creator:
 
         
 doc: |
-  TAR compress
-  =========================================
+  TAR extract
+  ===============================================
   
-  Creates compressed TAR file from a folder
+  Extracts the content of TAR file into a folder.
