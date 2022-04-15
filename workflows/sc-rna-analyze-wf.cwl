@@ -1027,7 +1027,6 @@ s:creator:
 
 doc: |
   Single-cell RNA-Seq Analyze
-  ====================================================================
 
   Runs filtering, normalization, scaling, integration (optionally) and
   clustering for a single or aggregated single-cell RNA-Seq datasets.

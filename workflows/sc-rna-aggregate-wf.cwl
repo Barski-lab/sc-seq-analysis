@@ -246,7 +246,6 @@ s:creator:
 
 doc: |
   Single-cell RNA-Seq Aggregate
-  =================================================================
 
   Aggregates gene expression data from multiple Single-cell RNA-Seq
   Alignment experiments.

@@ -296,7 +296,6 @@ s:creator:
 
 doc: |
   Single-cell RNA-Seq Alignment
-  ==================================================
 
   Runs Cell Ranger Count to quantify gene expression
   from a single-cell RNA-Seq library.

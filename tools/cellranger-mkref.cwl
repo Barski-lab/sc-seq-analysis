@@ -137,7 +137,6 @@ s:creator:
 
 doc: |
   Cell Ranger Build Reference Indices
-  ======================================================
-  
+
   Builds Cell Ranger compatible reference folder from
   the custom genome FASTA and gene GTF annotation files.

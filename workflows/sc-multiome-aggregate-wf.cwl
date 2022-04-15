@@ -288,7 +288,6 @@ s:creator:
 
 doc: |
   Single-cell Multiome ATAC and RNA-Seq Aggregate
-  ===========================================================
 
   Aggregates data from multiple Single-cell Multiome ATAC and
   RNA-Seq Alignment experiments

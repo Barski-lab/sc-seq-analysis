@@ -270,7 +270,6 @@ s:creator:
 
 doc: |
   Cellranger ARC Aggregate
-  ========================================================================
 
   Aggregates outputs from multiple runs of Cell Ranger ARC Count Chromatin
   Accessibility and Gene Expression.

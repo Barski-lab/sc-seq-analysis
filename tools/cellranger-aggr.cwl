@@ -213,7 +213,6 @@ s:creator:
 
 doc: |
   Cell Ranger Aggregate
-  ===========================================================================
 
   Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression.
 

@@ -270,7 +270,6 @@ s:creator:
 
 doc: |
   Cell Ranger ARC Count/Aggregate to UCSC Cell Browser
-  =====================================================
 
   Exports clustering results from Cell Ranger ARC Count
   Chromatin Accessibility and Gene Expression or Cell

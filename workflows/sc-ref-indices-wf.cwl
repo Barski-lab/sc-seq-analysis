@@ -210,7 +210,6 @@ s:creator:
 
 doc: |
   Single-cell Reference Indices
-  =============================================================
 
   Builds a Cell Ranger and Cell Ranger ARC compatible reference
   folders from the custom genome FASTA and gene GTF annotation

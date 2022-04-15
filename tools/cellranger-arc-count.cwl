@@ -410,7 +410,6 @@ s:creator:
 
 doc: |
   Cell Ranger ARC Count Chromatin Accessibility and Gene Expression
-  =================================================================
 
   Quantifies chromatin accessibility and gene expression from a
   single-cell Multiome ATAC/RNA-Seq library.

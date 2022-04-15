@@ -368,7 +368,6 @@ s:creator:
 
 doc: |
   Single-cell Multiome ATAC and RNA-Seq Alignment
-  ====================================================================
 
   Runs Cell Ranger ARC Count to quantifies chromatin accessibility and
   gene expression from a single-cell Multiome ATAC and RNA-Seq library

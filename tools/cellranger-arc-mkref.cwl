@@ -159,8 +159,7 @@ s:creator:
 
 doc: |
   Cell Ranger ARC Build Reference Indices
-  ====================================================================
-  
+
   Builds Cell Ranger ARC compatible reference folder from the custom
   genome FASTA and gene GTF annotation files.
   

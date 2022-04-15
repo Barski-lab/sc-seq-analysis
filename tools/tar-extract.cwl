@@ -79,6 +79,5 @@ s:creator:
         
 doc: |
   TAR extract
-  ===============================================
-  
+
   Extracts the content of TAR file into a folder.

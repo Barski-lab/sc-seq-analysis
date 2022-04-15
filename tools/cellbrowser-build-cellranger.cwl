@@ -182,8 +182,7 @@ s:creator:
 
 doc: |
   Cell Ranger Count/Aggregate to UCSC Cell Browser
-  =================================================================
-  
+
   Exports clustering results from Cell Ranger Count Gene Expression
   and Cell Ranger Aggregate experiments into compatible with UCSC
   Cell Browser format.
