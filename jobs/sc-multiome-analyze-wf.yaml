@@ -1,0 +1,35 @@
+feature_bc_matrices_folder:
+  class: File
+  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
+atac_fragments_file:
+  class: File
+  location: pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz
+annotation_gtf_file:
+  class: File
+  location: annotation.gtf
+blacklist_regions_file:
+  class: File
+  location: blacklist.bed
+rna_minimum_cells: 10
+minimum_genes: 300
+maximum_genes: 6200
+rna_minimum_umi: 1000
+mito_pattern: ^MT-
+maximum_mito_perc: 20
+minimum_novelty_score: 0.8
+atac_minimum_cells: 10
+atac_minimum_umi: 2500
+maximum_nucl_signal: 4
+minimum_tss_enrich: 2
+minimum_frip: 0.15
+maximum_blacklist_fraction: 0.05
+rna_dimensions: 30
+atac_dimensions: 30
+resolution: 0.5
+genes_of_interest:
+- CD8A
+- FOXP3
+- CD4
+parallel_memory_limit: 20
+vector_memory_limit: 20
+threads: 1
