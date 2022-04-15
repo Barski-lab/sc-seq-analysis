@@ -1,0 +1,697 @@
+import("dplyr", attach=FALSE)
+import("Seurat", attach=FALSE)
+import("Signac", attach=FALSE)
+import("tibble", attach=FALSE)
+import("glmGamPoi", attach=FALSE)  # safety measure. we don't use it directly, but SCTransform with method="glmGamPoi" needs it
+import("magrittr", `%>%`, attach=TRUE)
+
+export(
+    "rna_analyze",
+    "add_clusters",
+    "rna_preprocess",
+    "rna_log_single",
+    "rna_sct_single",
+    "rna_log_integrated",
+    "rna_sct_integrated",
+    "get_vars_to_regress",
+    "get_cell_cycle_scores",
+    "get_min_ident_size",
+    "get_putative_markers",
+    "atac_preprocess",
+    "atac_analyze",
+    "add_wnn_clusters"
+)
+
+get_vars_to_regress <- function(seurat_data, args, exclude_columns=NULL) {
+    vars_to_regress <- NULL
+    arguments <- c(args$regressmt, args$regressrnaumi,  args$regressgenes, args$regresscellcycle)   # any of then can be also NULL
+    metadata_columns <- c("mito_percentage", "nCount_RNA", "nFeature_RNA", "S.Score&G2M.Score")
+    for (i in 1:length(arguments)) {
+        current_argument <- arguments[i]
+        current_column <- metadata_columns[i]
+        if ( is.null(current_argument) || (current_column %in% exclude_columns) ) {
+            next
+        }
+        current_column <- base::unlist(base::strsplit(metadata_columns[i], "&"))
+        if ( !all(current_column %in% base::colnames(seurat_data@meta.data)) ){                            # the column doesn't exists in metadata
+            next
+        }
+        if (current_argument) {
+            if (is.null(vars_to_regress)) {
+                vars_to_regress <- current_column
+            } else {
+                vars_to_regress <- base::append(vars_to_regress, current_column)
+            }
+        }
+    }
+    return (vars_to_regress)
+}
+
+get_cell_cycle_scores <- function(seurat_data, assay, cell_cycle_data){   # we need this function to fail if something went wrong, so no tryCatch inside
+    SeuratObject::DefaultAssay(seurat_data) <- assay                      # safety measure
+    seurat_data <- Seurat::CellCycleScoring(
+        seurat_data,
+        s.features=base::as.vector(cell_cycle_data[base::tolower(cell_cycle_data$phase)=="s", "gene_id"]),
+        g2m.features=base::as.vector(cell_cycle_data[base::tolower(cell_cycle_data$phase)=="g2/m", "gene_id"]),
+        assay=assay,
+        verbose=FALSE
+    )
+    return (seurat_data)
+}
+
+rna_log_single <- function(seurat_data, args, cell_cycle_data=NULL){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                                # safety measure
+    base::print("Applying LogNormalize")
+    scaled_norm_seurat_data <- Seurat::NormalizeData(seurat_data, verbose=FALSE)
+    if(!is.null(cell_cycle_data)){
+        base::tryCatch(
+            expr = {
+                base::print("Trying to assign cell cycle scores for RNA assay")
+                scaled_norm_seurat_data <- get_cell_cycle_scores(                                       # if succeded adds S.Score and G2M.Score columns to medadata
+                    scaled_norm_seurat_data,
+                    "RNA",
+                    cell_cycle_data
+                )
+            },
+            error = function(e){
+                base::print(base::paste("Failed to run cell cycle scoring for RNA assay with error - ", e))
+            }
+        )
+    }
+    scaled_norm_seurat_data <- Seurat::FindVariableFeatures(
+        scaled_norm_seurat_data,
+        nfeatures=args$highvargenes,
+        verbose=FALSE
+    )
+    vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)                           # may or may not include S.Score and G2M.Score columns
+    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    scaled_norm_seurat_data <- Seurat::ScaleData(
+        scaled_norm_seurat_data,
+        vars.to.regress=vars_to_regress,
+        verbose=FALSE
+    )
+    SeuratObject::DefaultAssay(scaled_norm_seurat_data) <- "RNA"
+    return (scaled_norm_seurat_data)
+}
+
+rna_sct_single <- function(seurat_data, args, cell_cycle_data=NULL){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                # safety measure
+    method <- base::ifelse(args$norm=="sctglm", "glmGamPoi", "poisson")
+    vars_to_regress <- get_vars_to_regress(seurat_data, args)                       # will never include "S.Score", "G2M.Score" columns as cell cycle scores are not assigned
+    base::print(
+        base::paste(
+            "Applying SCTransform using", method,
+            "method for initial parameter estimation.",
+            "Regressing out", paste(vars_to_regress, collapse=", ")
+        )
+    )
+    scaled_norm_seurat_data <- Seurat::SCTransform(
+        seurat_data,                                                                # use not splitted seurat_data
+        assay="RNA",
+        new.assay.name="SCT",
+        variable.features.n=args$highvargenes,
+        method=method,
+        vars.to.regress=vars_to_regress,                                            # first portion of variables to regress. will never include "S.Score" and "G2M.Score"
+        conserve.memory=args$lowmem,
+        verbose=FALSE                                                               # too many stdout
+    )
+    if(!is.null(cell_cycle_data)){
+        base::tryCatch(
+            expr = {
+                base::print("Trying to assign cell cycle scores for SCT assay")
+                scaled_norm_seurat_data <- get_cell_cycle_scores(                       # if succeded adds S.Score and G2M.Score columns to medadata
+                    scaled_norm_seurat_data,
+                    "SCT",
+                    cell_cycle_data
+                )
+                vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)   # will include S.Score and G2M.Score
+                base::print(
+                    base::paste(
+                        "Re-applying SCTransform using", method,
+                        "method for initial parameter estimation.",
+                        "Regressing out", paste(vars_to_regress, collapse=", ")
+                    )
+                )
+                scaled_norm_seurat_data <- Seurat::SCTransform(
+                    seurat_data,
+                    assay="RNA",
+                    new.assay.name="SCT",
+                    variable.features.n=args$highvargenes,
+                    method=method,
+                    vars.to.regress=vars_to_regress,
+                    conserve.memory=args$lowmem,
+                    verbose=FALSE
+                )
+            },
+            error = function(e){
+                base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
+            }
+        )
+    }
+    SeuratObject::DefaultAssay(scaled_norm_seurat_data) <- "SCT"
+    return (scaled_norm_seurat_data)
+}
+
+get_min_ident_size <- function(splitted_seurat_data){
+    min_ident_size <- min(
+        table(
+            unlist(
+                lapply(
+                    lapply(
+                        lapply(
+                            splitted_seurat_data,
+                            SeuratObject::Idents
+                        ),
+                        as.character
+                    ),
+                    base::as.vector
+                )
+            )
+        )
+    )
+    return (min_ident_size)
+}
+
+
+rna_log_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL){
+    failed_cell_cycle_scoring <- FALSE
+    for (i in 1:length(splitted_seurat_data)){
+        SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "RNA"                            # safety measure
+        base::print(
+            base::paste(
+                "Applying LogNormalize for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                "dataset"
+            )
+        )
+        splitted_seurat_data[[i]] <- Seurat::NormalizeData(
+            splitted_seurat_data[[i]],
+            verbose=FALSE
+        )
+        if(!is.null(cell_cycle_data)){
+            if (!failed_cell_cycle_scoring){
+                base::tryCatch(
+                    expr = {
+                        base::print(
+                            base::paste(
+                                "Trying to assign cell cycle scores for RNA assay of",
+                                SeuratObject::Idents(splitted_seurat_data[[i]])[1], "dataset"
+                            )
+                        )
+                        splitted_seurat_data[[i]] <- get_cell_cycle_scores(                       # if succeded adds S.Score and G2M.Score columns to medadata
+                            splitted_seurat_data[[i]],
+                            "RNA",
+                            cell_cycle_data
+                        )
+                    },
+                    error = function(e){
+                        base::print(base::paste("Failed to run cell cycle scoring for RNA assay with error - ", e))
+                        failed_cell_cycle_scoring <- TRUE
+                    }
+                )
+            } else {
+                base::print(
+                    base::paste(
+                        "Skip cell cycle scores assignment for RNA assay of",
+                        SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                        "dataset due to failure in one of the other datasets."
+                    )
+                )
+            }
+        }
+        splitted_seurat_data[[i]] <- Seurat::FindVariableFeatures(
+            splitted_seurat_data[[i]],
+            nfeatures=args$highvargenes,
+            verbose=FALSE
+        )
+    }
+    integration_features <- Seurat::SelectIntegrationFeatures(
+        splitted_seurat_data,
+        nfeatures=args$highvargenes,
+        verbose=FALSE
+    )
+    integration_anchors <- Seurat::FindIntegrationAnchors(
+        splitted_seurat_data,
+        normalization.method="LogNormalize",
+        anchor.features=integration_features,
+        verbose=FALSE
+    )
+    integrated_seurat_data <- Seurat::IntegrateData(
+        integration_anchors, 
+        new.assay.name="rna_integrated",
+        normalization.method="LogNormalize",
+        k.weight=min(get_min_ident_size(splitted_seurat_data), 100),        # k.weight 100 by default, but shouldn't be bigger than the min number of cells among all identities after filtering
+        verbose=FALSE
+    )
+    if (failed_cell_cycle_scoring){
+        base::print(
+            base::paste(
+                "At least one of the datasets failed in cell cycle score assignment.",
+                "Removing S.Score and G2M.Score columns from metadata."
+            )
+        )
+        integrated_seurat_data[["S.Score"]] <- NULL
+        integrated_seurat_data[["G2M.Score"]] <- NULL
+    }
+    vars_to_regress <- get_vars_to_regress(integrated_seurat_data, args)                # may or may not include S.Score and G2M.Score columns
+    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    integrated_seurat_data <- Seurat::ScaleData(
+        integrated_seurat_data,
+        vars.to.regress=vars_to_regress,
+        verbose=FALSE
+    )
+    SeuratObject::DefaultAssay(integrated_seurat_data) <- "rna_integrated"
+    base::rm(integration_features, integration_anchors)                                 # remove unused data
+    base::gc(verbose=FALSE)
+    return (integrated_seurat_data)
+}
+
+rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL){
+    method <- base::ifelse(args$norm=="sctglm", "glmGamPoi", "poisson")
+    failed_cell_cycle_scoring <- FALSE
+    for (i in 1:length(splitted_seurat_data)) {
+        SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "RNA"                            # safety measure
+        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)                   # will never include S.Score and G2M.Score
+        base::print(
+            base::paste(
+                "Applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                "dataset using", method, "method for initial parameter estimation.",
+                "Regressing out", paste(vars_to_regress, collapse=", ")
+            )
+        )
+        splitted_seurat_data[[i]] <- Seurat::SCTransform(
+            splitted_seurat_data[[i]],
+            assay="RNA",
+            new.assay.name="SCT",
+            variable.features.n=args$highvargenes,
+            method=method,
+            vars.to.regress=vars_to_regress,
+            conserve.memory=args$lowmem,
+            verbose=FALSE
+        )
+        if(!is.null(cell_cycle_data)){
+            if (!failed_cell_cycle_scoring){
+                base::tryCatch(
+                    expr = {
+                        base::print(
+                            base::paste(
+                                "Trying to assign cell cycle scores for SCT assay of",
+                                SeuratObject::Idents(splitted_seurat_data[[i]])[1], "dataset"
+                            )
+                        )
+                        splitted_seurat_data[[i]] <- get_cell_cycle_scores(                              # if succeded adds S.Score and G2M.Score columns to medadata
+                            splitted_seurat_data[[i]],
+                            "SCT",
+                            cell_cycle_data
+                        )
+                        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)          # will include S.Score and G2M.Score
+                        base::print(
+                            base::paste(
+                                "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                                "dataset using", method, "method for initial parameter estimation.",
+                                "Regressing out", paste(vars_to_regress, collapse=", ")
+                            )
+                        )
+                        splitted_seurat_data[[i]] <- Seurat::SCTransform(
+                            splitted_seurat_data[[i]],
+                            assay="RNA",
+                            new.assay.name="SCT",
+                            variable.features.n=args$highvargenes,
+                            method=method,
+                            vars.to.regress=vars_to_regress,
+                            conserve.memory=args$lowmem,
+                            verbose=FALSE
+                        )
+                    },
+                    error = function(e){
+                        base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
+                        failed_cell_cycle_scoring <- TRUE
+                    }
+                )
+            } else {
+                base::print(
+                    base::paste(
+                        "Skip cell cycle scores assignment for SCT assay of",
+                        SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                        "dataset due to failure in one of the other datasets."
+                    )
+                )
+            }
+        }
+    }
+    if (failed_cell_cycle_scoring){
+        base::print(base::paste("At least one of the datasets failed in cell cycle score assignment."))
+        for (i in 1:length(splitted_seurat_data)){
+            if(!is.null(args$regresscellcycle) && args$regresscellcycle){
+                vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args, "S.Score&G2M.Score")    # force to exclude "S.Score&G2M.Score"
+                base::print(
+                    base::paste(
+                        "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                        "dataset using", method, "method for initial parameter estimation.",
+                        "Regressing out", paste(vars_to_regress, collapse=", "),
+                        "Skip cell cycle score assignment."
+                    )
+                )
+                splitted_seurat_data[[i]] <- Seurat::SCTransform(
+                    splitted_seurat_data[[i]],
+                    assay="RNA",
+                    new.assay.name="SCT",
+                    variable.features.n=args$highvargenes,
+                    method=method,
+                    vars.to.regress=vars_to_regress,
+                    conserve.memory=args$lowmem,
+                    verbose=FALSE
+                )
+            } else {
+                base::print(
+                    base::paste(
+                        "Removing S.Score and G2M.Score columns from the metadata of",
+                        SeuratObject::Idents(splitted_seurat_data[[i]])[1]
+                    )
+                )
+                splitted_seurat_data[[i]][["S.Score"]] <- NULL
+                splitted_seurat_data[[i]][["G2M.Score"]] <- NULL
+            }
+        }
+    }
+    integration_features <- Seurat::SelectIntegrationFeatures(
+        splitted_seurat_data,
+        nfeatures=args$highvargenes,
+        verbose=FALSE
+    )
+    splitted_seurat_data <- Seurat::PrepSCTIntegration(
+        splitted_seurat_data, 
+        anchor.features=integration_features,
+        verbose=FALSE
+    )
+    integration_anchors <- Seurat::FindIntegrationAnchors(
+        splitted_seurat_data,
+        normalization.method="SCT",
+        anchor.features=integration_features,
+        verbose=FALSE
+    )
+    integrated_seurat_data <- Seurat::IntegrateData(
+        integration_anchors, 
+        new.assay.name="rna_integrated",
+        normalization.method="SCT",
+        k.weight=min(get_min_ident_size(splitted_seurat_data), 100),        # k.weight 100 by default, but shouldn't be bigger than the min number of cells among all identities after filtering
+        verbose=FALSE
+    )
+    SeuratObject::DefaultAssay(integrated_seurat_data) <- "rna_integrated"
+    base::rm(integration_features, integration_anchors)                         # remove unused data
+    base::gc(verbose=FALSE)
+    return (integrated_seurat_data)
+}
+
+rna_preprocess <- function(seurat_data, args, cell_cycle_data=NULL) {
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                                        # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                                        # safety measure
+    splitted_seurat_data <- Seurat::SplitObject(seurat_data, split.by="new.ident")                          # to check if we have aggregated datasets
+    if (args$ntgr == "none" | length(splitted_seurat_data) == 1){
+        base::print(
+            base::paste(
+                "Skipping datasets integration (either forced or only one identity",
+                "is present). Using the original not splitted seurat data."
+            )
+        )
+        if (args$norm == "log"){
+            processed_seurat_data <- rna_log_single(seurat_data, args, cell_cycle_data)                     # sets default assay to RNA
+        } else {
+            processed_seurat_data <- rna_sct_single(seurat_data, args, cell_cycle_data)                     # sets default assay to SCT
+        }
+    } else {
+        base::print("Running datasets integration using splitted seurat data.")
+        if (args$norm == "log"){
+            processed_seurat_data <- rna_log_integrated(splitted_seurat_data, args, cell_cycle_data)        # sets default assay to rna_integrated
+        } else {
+            processed_seurat_data <- rna_sct_integrated(splitted_seurat_data, args, cell_cycle_data)        # sets default assay to rna_integrated
+        }
+    }
+    base::rm(splitted_seurat_data)
+    base::gc(verbose=FALSE)
+    return (processed_seurat_data)
+}
+
+rna_analyze <- function(seurat_data, args, cell_cycle_data=NULL){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                            # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                            # safety measure
+    backup_reductions <- c()                                                    # RNA integration main remove atac related reductions so we need to back them up
+    for (reduction_name in c("atac_lsi", "atacumap", "wnnumap")){
+        if (reduction_name %in% names(seurat_data@reductions)){
+            base::print(base::paste("Backing up reduction", reduction_name))
+            backup_reductions[[reduction_name]] <- seurat_data[[reduction_name]]
+        }
+    }
+    seurat_data <- rna_preprocess(seurat_data, args, cell_cycle_data)           # sets "rna_integrated" as a default assay for integrated data, and either "RNA" or "SCT" for not integrated data
+    if (length(backup_reductions) > 0){                                         # restoring backed up reductions
+        for (reduction_name in names(backup_reductions)){
+            base::print(base::paste("Restoring reduction", reduction_name, "from backup"))
+            seurat_data[[reduction_name]] <- backup_reductions[[reduction_name]]
+        }
+    }
+    base::print(
+        base::paste(
+            "Performing PCA reduction on", SeuratObject::DefaultAssay(seurat_data),
+            "assay using 50 principal components"
+        )
+    )
+    seurat_data <- Seurat::RunPCA(seurat_data, npcs=50, verbose=FALSE)          # add "pca" reduction that should be used in UMAP
+    seurat_data <- Seurat::RunUMAP(
+        seurat_data,
+        reduction="pca",
+        dims=args$dimensions,
+        reduction.name="rnaumap",
+        reduction.key="RNAUMAP_",
+        spread=base::ifelse(is.null(args$uspread), 1, args$uspread),
+        min.dist=base::ifelse(is.null(args$umindist), 0.3, args$umindist),
+        n.neighbors=base::ifelse(is.null(args$uneighbors), 30, args$uneighbors),
+        metric=base::ifelse(is.null(args$umetric), "cosine", args$umetric),
+        umap.method=base::ifelse(is.null(args$umethod), "uwot", args$umethod),
+        verbose=FALSE
+    )
+    return (seurat_data)
+}
+
+add_clusters <- function(seurat_data, assay, graph_name, reduction, cluster_algorithm, args){
+    SeuratObject::DefaultAssay(seurat_data) <- assay                                  # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                  # safety measure
+    seurat_data <- Seurat::FindNeighbors(
+        seurat_data,
+        annoy.metric=base::ifelse(is.null(args$ametric), "euclidean", args$ametric),
+        reduction=reduction,
+        dims=args$dimensions,
+        graph.name=base::paste(graph_name, c("_nn", ""), sep=""),
+        verbose=FALSE
+    )
+    seurat_data <- Seurat::FindClusters(
+        seurat_data,
+        resolution=args$resolution,
+        graph.name=graph_name,
+        algorithm=cluster_algorithm,
+        verbose=FALSE
+    )
+    return (seurat_data)
+}
+
+add_wnn_clusters <- function(seurat_data, graph_name, reductions, dimensions, cluster_algorithm, args){
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                   # safety measure
+    seurat_data <- Seurat::FindMultiModalNeighbors(
+        seurat_data,
+        reduction.list=reductions,                                       # list("pca", "atac_lsi"),
+        dims.list=dimensions,
+        snn.graph.name=graph_name,                                       # "wsnn"
+        weighted.nn.name="weighted.nn",
+        verbose=FALSE
+    )
+    seurat_data <- Seurat::RunUMAP(
+        seurat_data,
+        nn.name="weighted.nn",
+        reduction.name="wnnumap",
+        reduction.key="WNNUMAP_",
+        spread=base::ifelse(is.null(args$uspread), 1, args$uspread),
+        min.dist=base::ifelse(is.null(args$umindist), 0.3, args$umindist),
+        n.neighbors=base::ifelse(is.null(args$uneighbors), 30, args$uneighbors),
+        metric=base::ifelse(is.null(args$umetric), "cosine", args$umetric),
+        umap.method=base::ifelse(is.null(args$umethod), "uwot", args$umethod),
+        verbose=FALSE
+    )
+    seurat_data <- Seurat::FindClusters(
+        seurat_data,
+        graph.name=graph_name,
+        algorithm=cluster_algorithm,                                    # 3
+        resolution=args$resolution,
+        verbose=FALSE
+    )
+    return (seurat_data)
+}
+
+get_putative_markers <- function(seurat_data, assay, resolution_prefix, args, latent_vars=NULL, min_diff_pct=-Inf){
+    SeuratObject::DefaultAssay(seurat_data) <- assay                            # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                            # safety measure
+    all_putative_markers <- NULL
+    for (i in 1:length(args$resolution)) {
+        resolution <- args$resolution[i]
+        base::tryCatch(
+            expr = {
+                SeuratObject::Idents(seurat_data) <- paste(resolution_prefix, resolution, sep=".")
+                markers <- Seurat::FindAllMarkers(
+                    seurat_data,
+                    logfc.threshold=base::ifelse(is.null(args$logfc), 0.25, args$logfc),
+                    min.pct=base::ifelse(is.null(args$minpct), 0.1, args$minpct),
+                    only.pos=base::ifelse(is.null(args$onlypos), FALSE, args$onlypos),
+                    test.use=base::ifelse(is.null(args$testuse), "wilcox", args$testuse),
+                    min.diff.pct=min_diff_pct,
+                    latent.vars=latent_vars,
+                    verbose=FALSE
+                ) %>% dplyr::relocate(cluster, gene, .before=1) %>% dplyr::rename("feature"="gene")
+
+                if (base::nrow(markers) > 0) {
+                    markers <- markers %>% base::cbind(resolution=resolution, .)
+                } else {
+                    markers <- markers %>% tibble::add_column(resolution=base::numeric(), .before=1)  # safety measure in case markers was empty
+                }
+                if (!is.null(all_putative_markers)) {
+                    all_putative_markers <- base::rbind(all_putative_markers, markers)
+                } else {
+                    all_putative_markers <- markers
+                }
+                base::rm(markers)                                                             # remove unused data
+            },
+            error = function(e){
+                base::print(base::paste("Failed to identify putative markers for resolution", resolution, "with error -", e))
+            },
+            finally = {
+                SeuratObject::Idents(seurat_data) <- "new.ident"
+            }
+        )
+    }
+    base::gc(verbose=FALSE)
+    return (all_putative_markers)
+}
+
+atac_preprocess <- function(seurat_data, args) {
+    SeuratObject::DefaultAssay(seurat_data) <- "ATAC"                                           # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                            # safety measure
+
+    base::print(
+        base::paste(
+            "Applying TF-IDF normalization. Searching for top highly variable",
+            "features using", args$minvarpeaks, "as a lower percentile bound.",
+            "Analyzing all datasets jointly."
+        )
+    )
+    processed_seurat_data <- Signac::RunTFIDF(
+        seurat_data,
+        assay="ATAC",                                                                           # safety measure
+        verbose=FALSE
+    )
+    processed_seurat_data <- Signac::FindTopFeatures(
+        processed_seurat_data,
+        assay="ATAC",                                                                           # safety measure
+        min.cutoff=args$minvarpeaks,
+        verbose=FALSE
+    )
+
+    splitted_seurat_data <- Seurat::SplitObject(seurat_data, split.by="new.ident")              # need to use original seurat_data for possible integration below
+    if (args$ntgr == "none" | length(splitted_seurat_data) == 1){
+        base::print(
+            base::paste(
+                "Skipping datasets integration (either forced or only one identity",
+                "is present). Using the original not splitted seurat data."
+            )
+        )
+        processed_seurat_data <- Signac::RunSVD(
+            processed_seurat_data,
+            n=50,                                                                               # by default computes 50 singular values
+            reduction.name="atac_lsi",                                                          # adding "atac_lsi" for consistency
+            verbose=FALSE
+        )
+    } else {
+        base::print("Running datasets integration using splitted seurat data.")
+        processed_seurat_data <- Signac::RunSVD(
+            processed_seurat_data,
+            n=50,                                                                               # by default computes 50 singular values
+            reduction.name="lsi",                                                               # adding "lsi" as it will be used in integration
+            verbose=FALSE
+        )
+        for (i in 1:length(splitted_seurat_data)){                                              # it was splitted from not updated seurat_data
+            SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "ATAC"                     # safety measure
+            base::print(
+                base::paste(
+                    "Applying TF-IDF normalization. Searching for top highly variable",
+                    "features using", args$minvarpeaks, "as a lower percentile bound.",
+                    "Analyzing", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                    "dataset."
+                )
+            )
+            splitted_seurat_data[[i]] <- Signac::RunTFIDF(
+                splitted_seurat_data[[i]],
+                assay="ATAC",                                                                   # safety measure
+                verbose=FALSE
+            )
+            splitted_seurat_data[[i]] <- Signac::FindTopFeatures(
+                splitted_seurat_data[[i]],
+                assay="ATAC",                                                                   # safety measure
+                min.cutoff=args$minvarpeaks,
+                verbose=FALSE
+            )
+            splitted_seurat_data[[i]] <- Signac::RunSVD(
+                splitted_seurat_data[[i]],
+                n=50,                                                                           # by default computes 50 singular values
+                reduction.name="lsi",                                                           # adding "lsi" to be used in FindIntegrationAnchors
+                verbose=FALSE
+            )
+        }
+        integration_anchors <- Seurat::FindIntegrationAnchors(
+            splitted_seurat_data,
+            anchor.features=base::rownames(seurat_data),                                        # peaks from our ATAC assay
+            reduction="rlsi",                                                                   # will always search for "lsi" reductions in splitted_seurat_data
+            dims=args$dimensions,                                                               # don't need to use more than we are going to use in UMAP
+            verbose=FALSE
+        )
+        integrated_seurat_data <- Seurat::IntegrateEmbeddings(
+            anchorset=integration_anchors,
+            reductions=processed_seurat_data[["lsi"]],
+            new.reduction.name="atac_lsi",                                                      # adding "atac_lsi" for consistency
+            k.weight=min(get_min_ident_size(splitted_seurat_data), 100),                        # k.weight 100 by default, but shouldn't be bigger than the min number of cells among all identities after filtering
+            dims.to.integrate=args$dimensions                                                   # don't need to use more than we are going to use in UMAP
+        )
+        processed_seurat_data <- integrated_seurat_data
+        base::rm(integration_anchors, integrated_seurat_data)                                   # remove unused data
+    }
+    base::rm(splitted_seurat_data)
+    base::gc(verbose=FALSE)
+    return (processed_seurat_data)
+}
+
+atac_analyze <- function(seurat_data, args){
+    SeuratObject::DefaultAssay(seurat_data) <- "ATAC"                           # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                            # safety measure
+    backup_reductions <- c()                                                    # ATAC integration main remove RNA related reductions so we need to back them up
+    for (reduction_name in c("pca", "rnaumap", "wnnumap")){
+        if (reduction_name %in% names(seurat_data@reductions)){
+            base::print(base::paste("Backing up reduction", reduction_name))
+            backup_reductions[[reduction_name]] <- seurat_data[[reduction_name]]
+        }
+    }
+    seurat_data <- atac_preprocess(seurat_data, args)                            # adds "atac_lsi" reduction
+    if (length(backup_reductions) > 0){                                          # restoring backed up reductions
+        for (reduction_name in names(backup_reductions)){
+            base::print(base::paste("Restoring reduction", reduction_name, "from backup"))
+            seurat_data[[reduction_name]] <- backup_reductions[[reduction_name]]
+        }
+    }
+    seurat_data <- Seurat::RunUMAP(
+        seurat_data,
+        reduction="atac_lsi",
+        dims=args$dimensions,
+        reduction.name="atacumap",
+        reduction.key="ATACUMAP_",
+        spread=base::ifelse(is.null(args$uspread), 1, args$uspread),
+        min.dist=base::ifelse(is.null(args$umindist), 0.3, args$umindist),
+        n.neighbors=base::ifelse(is.null(args$uneighbors), 30, args$uneighbors),
+        metric=base::ifelse(is.null(args$umetric), "cosine", args$umetric),
+        umap.method=base::ifelse(is.null(args$umethod), "uwot", args$umethod),
+        verbose=FALSE
+    )
+    return (seurat_data)
+}
