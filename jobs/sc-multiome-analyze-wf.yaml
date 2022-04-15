@@ -1,15 +1,15 @@
 feature_bc_matrices_folder:
   class: File
-  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
+  location: pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz
 atac_fragments_file:
   class: File
-  location: pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz
+  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
 annotation_gtf_file:
   class: File
-  location: annotation.gtf
+  location: ENCFF159KBI.gtf
 blacklist_regions_file:
   class: File
-  location: blacklist.bed
+  location: hg38-blacklist.v2.bed
 rna_minimum_cells: 10
 minimum_genes: 300
 maximum_genes: 6200
