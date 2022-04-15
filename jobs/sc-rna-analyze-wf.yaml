@@ -17,7 +17,6 @@ rna_minimum_umi: 500
 minimum_novelty_score: 0.8
 mito_pattern: ^mt-
 maximum_mito_perc: 5
-normalization_method: sctglm
 dimensions: 20
 resolution: 0.5
 genes_of_interest:
@@ -35,8 +34,6 @@ genes_of_interest:
 - Cdh1
 - Upk3b
 - Mki67
-identify_diff_genes: true
-only_positive_diff_genes: true
 parallel_memory_limit: 8
 vector_memory_limit: 20
 threads: 2

@@ -9,7 +9,6 @@ requirements:
 - class: MultipleInputFeatureRequirement
 
 
-
 inputs:
 
   feature_bc_matrices_folder:
@@ -114,32 +113,6 @@ inputs:
       be removed.
       Default: skip cell cycle score assignment.
 
-  normalization_method:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "sct"
-      - "log"
-      - "sctglm"
-    doc: |
-      Normalization method applied to genes expression counts. If loaded Seurat object
-      includes multiple datasets, normalization will be run independently for each of
-      them, unless integration is disabled with --ntgr set to 'none'
-      Default: sct
-
-  integration_method:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "seurat"
-      - "none"
-    doc: |
-      Integration method used for joint analysis of multiple datasets. Automatically
-      set to 'none' if loaded Suerat object includes only one dataset.
-      Default: seurat
-
   highly_var_genes_count:
     type: int?
     doc: |
@@ -185,87 +158,6 @@ inputs:
       dimensions.
       Default: from 1 to 10
 
-  umap_spread:
-    type: float?
-    doc: |
-      The effective scale of embedded points on UMAP. In combination with '--mindist'
-      it determines how clustered/clumped the embedded points are.
-      Default: 1
-
-  umap_mindist:
-    type: float?
-    doc: |
-      Controls how tightly the embedding is allowed compress points together on UMAP.
-      Larger values ensure embedded points are moreevenly distributed, while smaller
-      values allow the algorithm to optimise more accurately with regard to local structure.
-      Sensible values are in the range 0.001 to 0.5.
-      Default:  0.3
-
-  umap_neighbors:
-    type: int?
-    doc: |
-      Determines the number of neighboring points used in UMAP. Larger values will result
-      in more global structure being preserved at the loss of detailed local structure.
-      In general this parameter should often be in the range 5 to 50.
-      Default: 30
-
-  umap_metric:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "euclidean"
-      - "manhattan"
-      - "chebyshev"
-      - "minkowski"
-      - "canberra"
-      - "braycurtis"
-      - "mahalanobis"
-      - "wminkowski"
-      - "seuclidean"
-      - "cosine"
-      - "correlation"
-      - "haversine"
-      - "hamming"
-      - "jaccard"
-      - "dice"
-      - "russelrao"
-      - "kulsinski"
-      - "ll_dirichlet"
-      - "hellinger"
-      - "rogerstanimoto"
-      - "sokalmichener"
-      - "sokalsneath"
-      - "yule"
-    doc: |
-      The metric to use to compute distances in high dimensional space for UMAP.
-      Default: cosine
-
-  umap_method:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "uwot"
-      - "uwot-learn"
-      - "umap-learn"
-    doc: |
-      UMAP implementation to run. If set to 'umap-learn' use --umetric 'correlation'
-      Default: uwot
-
-  cluster_metric:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "euclidean"
-      - "cosine"
-      - "manhattan"
-      - "hamming"
-    doc: |
-      Distance metric used when constructing nearest-neighbor graph before clustering.
-      Default: euclidean
-
   resolution:
     type:
     - "null"
@@ -285,13 +177,6 @@ inputs:
       Genes of interest to build genes expression plots.
       Default: None
 
-  identify_diff_genes:
-    type: boolean?
-    doc: |
-      Identify differentially expressed genes (putative gene markers) between each
-      pair of clusters for all resolutions.
-      Default: false
-
   minimum_logfc:
     type: float?
     doc: |
@@ -308,32 +193,6 @@ inputs:
       are detected in not lower than this fraction of cells in either of the
       two tested clusters. Ignored if '--diffgenes' is not set.
       Default: 0.1
-
-  only_positive_diff_genes:
-    type: boolean?
-    doc: |
-      For putative gene markers identification return only positive markers.
-      Ignored if '--diffgenes' is not set.
-      Default: false
-
-  test_to_use:
-    type:
-    - "null"
-    - type: enum
-      symbols:
-      - "wilcox"
-      - "bimod"
-      - "roc"
-      - "t"
-      - "negbinom"
-      - "poisson"
-      - "LR"
-      - "MAST"
-      - "DESeq2"
-    doc: |
-      Statistical test to use for putative gene markers identification.
-      Ignored if '--diffgenes' is not set.
-      Default: wilcox
 
   parallel_memory_limit:
     type: int?
@@ -356,7 +215,6 @@ inputs:
 
 
 outputs:
-
 
   raw_1_2_qc_mtrcs_pca_plot_png:
     type: File?
@@ -835,12 +693,6 @@ steps:
       minimum_novelty_score: minimum_novelty_score
       mito_pattern: mito_pattern
       maximum_mito_perc: maximum_mito_perc
-      export_pdf_plots:
-        default: false
-      verbose:
-        default: false
-      export_h5seurat_data:
-        default: false
       output_prefix:
         default: "step_1"
       parallel_memory_limit: parallel_memory_limit
@@ -885,27 +737,14 @@ steps:
     in:
       query_data_rds: sc_rna_filter/seurat_data_rds
       cell_cycle_data: cell_cycle_data
-      normalization_method: normalization_method
-      integration_method: integration_method
+      normalization_method:
+        default: "sctglm"
       highly_var_genes_count: highly_var_genes_count
       regress_mito_perc: regress_mito_perc
       regress_rna_umi: regress_rna_umi
       regress_genes: regress_genes
       regress_cellcycle: regress_cellcycle
       dimensions: dimensions
-      umap_spread: umap_spread
-      umap_mindist: umap_mindist
-      umap_neighbors: umap_neighbors
-      umap_metric: umap_metric
-      umap_method: umap_method
-      export_pdf_plots:
-        default: false
-      verbose:
-        default: false
-      export_h5seurat_data:
-        default: false
-      export_ucsc_cb:
-        default: false
       low_memory:
         default: true
       output_prefix:
@@ -935,20 +774,14 @@ steps:
     in:
       query_data_rds: sc_rna_reduce/seurat_data_rds
       dimensions: dimensions
-      cluster_metric: cluster_metric
       resolution: resolution
       genes_of_interest: genes_of_interest
-      identify_diff_genes: identify_diff_genes
+      identify_diff_genes:
+        default: true
       minimum_logfc: minimum_logfc
       minimum_pct: minimum_pct
-      only_positive_diff_genes: only_positive_diff_genes
-      test_to_use: test_to_use
-      export_pdf_plots:
-        default: false
-      verbose:
-        default: false
-      export_h5seurat_data:
-        default: false
+      only_positive_diff_genes:
+        default: true
       export_ucsc_cb:
         default: true
       output_prefix:
