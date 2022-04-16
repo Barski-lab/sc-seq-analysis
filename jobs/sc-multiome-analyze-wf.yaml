@@ -1,24 +1,24 @@
 feature_bc_matrices_folder:
   class: File
-  location: pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz
+  location: pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz     # https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.tar.gz
 atac_fragments_file:
   class: File
-  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
+  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz                 # https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
 annotation_gtf_file:
   class: File
-  location: ENCFF159KBI.gtf
+  location: gencode.v40.annotation.gtf                                        # https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.annotation.gtf.gz
 blacklist_regions_file:
   class: File
-  location: hg38-blacklist.v2.bed
+  location: hg38-blacklist.v2.bed                                             # https://github.com/Boyle-Lab/Blacklist/blob/master/lists/hg38-blacklist.v2.bed.gz
 rna_minimum_cells: 10
 minimum_genes: 300
-maximum_genes: 6200
+maximum_genes: 5000
 rna_minimum_umi: 1000
 mito_pattern: ^MT-
 maximum_mito_perc: 20
 minimum_novelty_score: 0.8
 atac_minimum_cells: 10
-atac_minimum_umi: 2500
+atac_minimum_umi: 5000
 maximum_nucl_signal: 4
 minimum_tss_enrich: 2
 minimum_frip: 0.15
@@ -27,9 +27,13 @@ rna_dimensions: 30
 atac_dimensions: 30
 resolution: 0.5
 genes_of_interest:
+- CD4
+- SELL
+- ITGA1
 - CD8A
 - FOXP3
 - CD4
-parallel_memory_limit: 20
-vector_memory_limit: 20
-threads: 1
+- SPI1
+parallel_memory_limit: 14
+vector_memory_limit: 32
+threads: 2

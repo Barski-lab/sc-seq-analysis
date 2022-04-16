@@ -1,15 +1,15 @@
 feature_bc_matrices_folder:
   class: File
-  location: filtered_feature_bc_matrix.tar.gz
+  location: filtered_feature_bc_matrix.tar.gz      # https://figshare.com/ndownloader/files/34819513
 aggregation_metadata:
   class: File
-  location: aggregation.csv
+  location: aggregation.csv                        # https://figshare.com/ndownloader/files/34819516
 grouping_data:
   class: File
-  location: condition.csv
+  location: condition.csv                          # https://figshare.com/ndownloader/files/34819519
 cell_cycle_data:
   class: File
-  location: mouse_cell_cycle_genes.csv
+  location: mouse_cell_cycle_genes.csv             # https://figshare.com/ndownloader/files/34822054
 rna_minimum_cells: 10
 minimum_genes: 300
 maximum_genes: 6200

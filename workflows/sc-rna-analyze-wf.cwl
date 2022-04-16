@@ -694,7 +694,7 @@ steps:
       mito_pattern: mito_pattern
       maximum_mito_perc: maximum_mito_perc
       output_prefix:
-        default: "step_1"
+        default: "s_1"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
@@ -748,7 +748,7 @@ steps:
       low_memory:
         default: true
       output_prefix:
-        default: "step_2"
+        default: "s_2"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
@@ -785,7 +785,7 @@ steps:
       export_ucsc_cb:
         default: true
       output_prefix:
-        default: "step_3"
+        default: "s_3"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads

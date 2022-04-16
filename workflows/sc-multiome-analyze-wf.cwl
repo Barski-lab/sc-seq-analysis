@@ -1060,7 +1060,7 @@ steps:
       minimum_frip: minimum_frip
       maximum_blacklist_fraction: maximum_blacklist_fraction
       output_prefix:
-        default: "step_1"
+        default: "s_1"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
@@ -1132,7 +1132,7 @@ steps:
       low_memory:
         default: true
       output_prefix:
-        default: "step_2"
+        default: "s_2"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
@@ -1167,7 +1167,7 @@ steps:
       minimum_var_peaks_perc: minimum_var_peaks_perc
       dimensions: atac_dimensions
       output_prefix:
-        default: "step_3"
+        default: "s_3"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
@@ -1206,7 +1206,7 @@ steps:
       export_ucsc_cb:
         default: true
       output_prefix:
-        default: "step_4"
+        default: "s_4"
       parallel_memory_limit: parallel_memory_limit
       vector_memory_limit: vector_memory_limit
       threads: threads
