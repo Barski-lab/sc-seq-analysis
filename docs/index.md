@@ -1,4 +1,4 @@
-# Bioinformatics analysis of scRNA-Seq data
+# Bioinformatics analysis of scRNA-Seq data in SciDAP
 
 ## Table of Contents
   1. [Create a new project and attach workflows](#step-1-create-a-new-project-and-attach-workflows)
