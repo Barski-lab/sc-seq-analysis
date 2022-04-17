@@ -5,8 +5,8 @@
 # CWL toolkit for single-cell data analysis
 
 **Notes:**
-- For details on how to use the published workflows version ***[v1.0.1](https://github.com/Barski-lab/scRNA-Seq-Analysis/tree/v1.0.1)*** in ***[SciDAP](https://scidap.com/)*** refer to the ***[Tutorials](https://barski-lab.github.io/sc-seq-analysis/)*** page.
-- For up to date workflow description see **[Wiki](https://github.com/Barski-lab/sc-seq-analysis/wiki)** page.
+- For details on how to use the published version ***[v1.0.1](https://github.com/Barski-lab/scRNA-Seq-Analysis/tree/v1.0.1)*** of workflows for scRNA-Seq data analysis in ***[SciDAP](https://scidap.com/)*** refer to the ***[Tutorials](https://barski-lab.github.io/sc-seq-analysis/)*** page.
+- For up to date workflow description see ***[Wiki](https://github.com/Barski-lab/sc-seq-analysis/wiki)*** page.
 
 **Publications:**
 
@@ -18,6 +18,17 @@ https://doi.org/10.1016/j.xpro.2021.100989*
 This repository contains R scripts and CWL tools for single-cell RNA-Seq and Multiome data analyses. The CWL tools can be chained together into the workflows as shown on the figure below.
 
 ![](./docs/images/readme/figure_1.png)
+
+**Complete list of the available CWL workflows**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [sc-ref-indices-wf.cwl](./workflows/sc-ref-indices-wf.cwl) | Builds a Cell Ranger and Cell Ranger ARC compatible reference folders from the custom genome FASTA and gene GTF annotation files |
+| [sc-rna-align-wf.cwl](./workflows/sc-rna-align-wf.cwl) | Runs Cell Ranger Count to quantify gene expression from a single-cell RNA-Seq library |
+| [sc-rna-aggregate-wf.cwl](./workflows/sc-rna-aggregate-wf.cwl) | Aggregates gene expression data from multiple Single-cell RNA-Seq Alignment experiments |
+| [sc-rna-analyze-wf.cwl](./workflows/sc-rna-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell RNA-Seq datasets |
+| [sc-multiome-align-wf.cwl](./workflows/sc-multiome-align-wf.cwl) | Runs Cell Ranger ARC Count to quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC and RNA-Seq library |
+| [sc-multiome-aggregate-wf.cwl](./workflows/sc-multiome-aggregate-wf.cwl) | Aggregates data from multiple Single-cell Multiome ATAC and RNA-Seq Alignment experiments |
+| [sc-multiome-analyze-wf.cwl](./workflows/sc-multiome-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell Multiome ATAC and RNA-Seq datasets |
 
 **Complete list of the available CWL tools**
 | Name                                 | Description  |
