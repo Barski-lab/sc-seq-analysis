@@ -18,7 +18,7 @@ https://doi.org/10.1016/j.xpro.2021.100989*
 This repository contains R scripts and CWL tools for single-cell RNA-Seq and Multiome data analyses. The CWL tools can be chained together into the workflows.
 
 **List of CWL tools**
-|                                      |              |
+| Name                                 | Description  |
 |:-------------------------------------|:-------------|
 | cellranger-mkref.cwl                 | Builds Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files |
 | cellranger-count.cwl                 | Quantifies gene expression from a single-cell RNA-Seq library |
