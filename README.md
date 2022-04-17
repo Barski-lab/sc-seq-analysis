@@ -6,7 +6,7 @@
 
 **Notes:**
 - For details on how to use the published workflows version ***[v1.0.1](https://github.com/Barski-lab/scRNA-Seq-Analysis/tree/v1.0.1)*** in ***[SciDAP](https://scidap.com/)*** refer to the ***[Tutorials](https://barski-lab.github.io/sc-seq-analysis/)*** page.
-- For up to date workflow description see Wiki page.
+- For up to date workflow description see [Wiki](https://github.com/Barski-lab/sc-seq-analysis/wiki) page.
 
 **Publications:**
 
