@@ -8,7 +8,7 @@
 # Website:          https://github.com/Barski-lab/workflows
 # Provides:         set of R scripts for single-cell data analysis
 # Base Image:       satijalab/seurat:4.0.6
-# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.4 -f sc-tools-Dockerfile .
+# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.4 .
 # Pull Cmd:         docker pull biowardrobe2/sc-tools:v0.0.4
 # Run Cmd:          docker run --rm -ti biowardrobe2/sc-tools:v0.0.4 /bin/bash
 ##########################################################################################################
@@ -63,8 +63,8 @@ COPY ./scripts/sc_tools/modules/*.R /usr/local/bin/modules/
 
 ### Installing dependencies
 RUN apt-get update && \
-    apt-get install libgcc-10-dev python3-dev python3-pip libxml2-dev libcurl4-openssl-dev && \
-                    libssl-dev pandoc libudunits2-dev libgdal-dev libcairo2-dev libharfbuzz-dev && \
+    apt-get install libgcc-10-dev python3-dev python3-pip libxml2-dev libcurl4-openssl-dev \
+                    libssl-dev pandoc libudunits2-dev libgdal-dev libcairo2-dev libharfbuzz-dev \
                     libfribidi-dev libbz2-dev -y && \
     pip3 install scipy numpy && \
     pip3 install cellbrowser==${CB_VERSION} && \
