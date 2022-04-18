@@ -2,7 +2,7 @@
 [![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)](https://www.python.org/downloads/release/python-38/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5315021.svg)](https://doi.org/10.5281/zenodo.5315021)
 
-# CWL toolkit for single-cell data analysis
+# CWL toolkit for single-cell sequencing data analysis
 
 **Notes:**
 - For details on how to use the published version ***[v1.0.1](https://github.com/Barski-lab/scRNA-Seq-Analysis/tree/v1.0.1)*** of workflows for scRNA-Seq data analysis in ***[SciDAP](https://scidap.com/)*** refer to the ***[Tutorials](https://barski-lab.github.io/sc-seq-analysis/)*** page.
