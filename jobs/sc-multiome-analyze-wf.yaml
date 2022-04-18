@@ -32,7 +32,6 @@ genes_of_interest:
 - ITGA1
 - CD8A
 - FOXP3
-- CD4
 - SPI1
 parallel_memory_limit: 14
 vector_memory_limit: 32
