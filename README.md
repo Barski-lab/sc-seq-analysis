@@ -17,7 +17,7 @@ https://doi.org/10.1016/j.xpro.2021.100989*
 
 This repository contains R scripts and CWL tools for single-cell RNA-Seq and Multiome data analyses. Tools can be combined into the workflows depending on the type of input datasets and required complexity of the analysis. Tools within boxes 2 and 3 can be piped together in an arbitrary order. For example, for single-cell RNA-Seq use 1(a) – 2(a) – 3(a), for Multiome ATAC and RNA-Seq use 1(b) – 2(a) – 2(b) – 3(c) and optionally 3(a) – 3(b).
 
-![](https://raw.githubusercontent.com/michael-kotliar/sc-seq-analysis-wiki-data/main/readme/scheme.png)
+![](https://raw.githubusercontent.com/michael-kotliar/sc-seq-analysis-wiki-data/main/readme/scheme.gif)
 
 **Complete list of the available CWL workflows**
 | Name                                 | Description  |
