@@ -1009,7 +1009,7 @@ outputs:
 
   seurat_data_h5ad:
     type: File?
-    outputSource: sc_rna_cluster/seurat_data_h5ad
+    outputSource: sc_wnn_cluster/seurat_data_h5ad
     doc: |
       Reduced Seurat data in h5ad format
 
