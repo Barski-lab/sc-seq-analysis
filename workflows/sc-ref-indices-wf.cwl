@@ -173,8 +173,8 @@ s:alternateName: |
   Builds Cell Ranger and Cell Ranger ARC compatible reference folders from
   the custom genome FASTA and gene GTF annotation files
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/workflows/sc-ref-indices-wf.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/workflows/sc-ref-indices-wf.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

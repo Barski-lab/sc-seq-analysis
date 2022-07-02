@@ -176,8 +176,8 @@ label: "Cell Ranger Aggregate"
 s:name: "Cell Ranger Aggregate"
 s:alternateName: "Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-aggr.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/cellranger-aggr.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

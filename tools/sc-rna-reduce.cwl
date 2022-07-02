@@ -6,12 +6,12 @@ requirements:
 - class: InlineJavascriptRequirement
 - class: EnvVarRequirement
   envDef:
-    R_MAX_VSIZE: $(inputs.vector_memory_limit * 1000000000)
+    R_MAX_VSIZE: $((inputs.vector_memory_limit * 1000000000).toString())
 
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.4
+  dockerPull: biowardrobe2/sc-tools:v0.0.9
 
 
 inputs:
@@ -93,21 +93,16 @@ inputs:
       confounding source of variation.
       Default: false
 
-  regress_rna_umi:
-    type: boolean?
-    inputBinding:
-      prefix: "--regressrnaumi"
-    doc: |
-      Regress UMI per cell counts as a confounding source of variation.
-      Default: false
-
   regress_genes:
-    type: boolean?
+    type:
+    - "null"
+    - string
+    - string[]
     inputBinding:
       prefix: "--regressgenes"
     doc: |
-      Regress genes per cell counts as a confounding source of variation.
-      Default: false
+      Genes which expression should be regressed as a confounding source of variation.
+      Default: None
 
   regress_cellcycle:
     type: boolean?
@@ -231,6 +226,14 @@ inputs:
       prefix: "--h5seurat"
     doc: |
       Save Seurat data to h5seurat file.
+      Default: false
+
+  export_h5ad_data:
+    type: boolean?
+    inputBinding:
+      prefix: "--h5ad"
+    doc: |
+      Save Seurat data to h5ad file.
       Default: false
 
   export_ucsc_cb:
@@ -545,6 +548,13 @@ outputs:
     doc: |
       Reduced Seurat data in h5seurat format
 
+  seurat_data_h5ad:
+    type: File?
+    outputBinding:
+      glob: "*_data.h5ad"
+    doc: |
+      Reduced Seurat data in h5ad format
+
   stdout_log:
     type: stdout
 
@@ -569,8 +579,8 @@ label: "Single-cell RNA-Seq Dimensionality Reduction Analysis"
 s:name: "Single-cell RNA-Seq Dimensionality Reduction Analysis"
 s:alternateName: "Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/sc-rna-reduce.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-rna-reduce.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

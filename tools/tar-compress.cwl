@@ -48,8 +48,8 @@ label: "TAR compress"
 s:name: "TAR compress"
 s:alternateName: "Creates compressed TAR file from a folder"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/tar-compress.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/tar-compress.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

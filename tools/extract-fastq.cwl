@@ -98,8 +98,8 @@ label: "Extract FASTQ"
 s:name: "Extract FASTQ"
 s:alternateName: "Extracts bzip2-/gzip-/zip-compressed FASTQ file"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/extract-fastq.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/extract-fastq.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

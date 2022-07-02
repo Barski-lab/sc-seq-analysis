@@ -373,8 +373,8 @@ label: "Cell Ranger ARC Count Chromatin Accessibility and Gene Expression"
 s:name: "Cell Ranger ARC Count Chromatin Accessibility and Gene Expression"
 s:alternateName: "Quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC/RNA-Seq library"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-arc-count.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/cellranger-arc-count.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

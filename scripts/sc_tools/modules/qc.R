@@ -3,6 +3,7 @@ import("purrr", attach=FALSE)
 import("tidyr", attach=FALSE)
 import("Seurat", attach=FALSE)
 import("Signac", attach=FALSE)
+import("tibble", attach=FALSE)
 import("data.table", attach=FALSE)
 import("bestNormalize", attach=FALSE)
 import("GenomicRanges", attach=FALSE)
@@ -10,10 +11,12 @@ import("magrittr", `%>%`, attach=TRUE)
 
 export(
     "qc_metrics_pca",
+    "counts_pca",
     "add_rna_qc_metrics",
     "add_atac_qc_metrics",
     "add_peak_qc_metrics",
-    "quartile_qc_metrics"
+    "quartile_qc_metrics",
+    "add_gene_expr_percentage"
 )
 
 
@@ -64,6 +67,30 @@ qc_metrics_pca <- function(seurat_data, qc_columns, qc_labels, orq_transform=FAL
         },
         error = function(e){
             base::print(base::paste("Failed to compute PCA for QC metrics due to", e))
+        }
+    )
+}
+
+counts_pca <- function(counts_data){
+    base::tryCatch(
+        expr = {
+            base::print("Computing PCA for counts data")
+            target_data <- base::as.data.frame(counts_data) %>%
+                           tidyr::drop_na() %>%
+                           dplyr::filter_all(dplyr::all_vars(!is.infinite(.))) %>%
+                           dplyr::filter_all(dplyr::any_vars(. != 0))                       # remove rows with only zeros, otherwise prcomp fails
+            pca_raw <- stats::prcomp(
+                base::t(target_data),
+                center=TRUE,
+                scale.=TRUE
+            )
+            pca_scores <- base::as.data.frame(pca_raw$x) %>%
+                          tibble::rownames_to_column(var="group")
+            pca_variance <- round(pca_raw$sdev / sum(pca_raw$sdev) * 100, 2)
+            return (list(scores=pca_scores, variance=pca_variance))
+        },
+        error = function(e){
+            base::print(base::paste("Failed to compute PCA for counts data due to", e))
         }
     )
 }
@@ -131,6 +158,21 @@ add_peak_qc_metrics <- function(seurat_data, blacklist_data, args){
     return (seurat_data)
 }
 
+add_gene_expr_percentage <- function(seurat_data, target_genes){
+    backup_assay <- SeuratObject::DefaultAssay(seurat_data)
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"
+    for (i in 1:length(target_genes)){
+        current_gene <- target_genes[i]
+        seurat_data[[base::paste("perc", current_gene, sep="_")]] <- Seurat::PercentageFeatureSet(
+            seurat_data,
+            pattern=base::paste0("^", current_gene, "$")
+        )
+    }
+    SeuratObject::DefaultAssay(seurat_data) <- backup_assay
+    base::gc(verbose=FALSE)
+    return (seurat_data)
+}
+
 # DEPRECATED as we now use standard Signac::GetTSSPositions function with biotypes=NULL when all gene_biotype are NA
 get_tss_positions <- function(annotation_ranges){
     # Based on GetTSSPositions function from signac/R/utilities.R
@@ -171,7 +213,7 @@ quartile_qc_metrics <- function(seurat_data, features, prefix="quartile"){
                 seurat_data <- SeuratObject::AddMetaData(
                     object=seurat_data,
                     metadata=base::cut(
-                        seurat_data@meta.data[, current_feature], 
+                        seurat_data@meta.data[, current_feature],
                         breaks=c(-Inf, quartiles[1], quartiles[2], quartiles[3], Inf), 
                         labels=c("Low", "Medium", "Medium high", "High")
                     ),

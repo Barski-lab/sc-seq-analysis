@@ -331,8 +331,8 @@ s:alternateName: |
   Runs Cell Ranger ARC Count to quantifies chromatin accessibility and gene expression
   from a single-cell Multiome ATAC and RNA-Seq library
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/workflows/sc-multiome-align-wf.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/workflows/sc-multiome-align-wf.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

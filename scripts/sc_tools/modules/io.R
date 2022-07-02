@@ -3,6 +3,7 @@ import("purrr", attach=FALSE)
 import("Seurat", attach=FALSE)
 import("Signac", attach=FALSE)
 import("tibble", attach=FALSE)
+import("sceasy", attach=FALSE)
 import("SeuratDisk", attach=FALSE)
 import("rtracklayer", attach=FALSE)
 import("GenomicRanges", attach=FALSE)
@@ -13,6 +14,8 @@ export(
     "load_barcodes_data",
     "export_data",
     "export_rds",
+    "export_gct",
+    "export_cls",
     "load_cell_identity_data",
     "extend_metadata",
     "load_grouping_data",
@@ -21,6 +24,7 @@ export(
     "load_10x_multiome_data",
     "load_10x_rna_data",
     "export_h5seurat",
+    "export_h5ad",
     "load_cell_cycle_data",
     "replace_fragments"
 )
@@ -120,6 +124,18 @@ export_h5seurat <- function(data, location, overwrite=TRUE){
     )
 }
 
+export_h5ad <- function(data, location){
+    base::tryCatch(
+        expr = {
+            sceasy::convertFormat(data, from="seurat", to="anndata", outFile=location)
+            base::print(base::paste("Exporting data as h5ad to", location, sep=" "))
+        },
+        error = function(e){
+            base::print(base::paste("Failed to export data as h5ad to", location, sep=" "))
+        }
+    )
+}
+
 load_cell_identity_data <- function(location) {
     cell_identity_data <- utils::read.table(
         location,
@@ -134,37 +150,72 @@ load_cell_identity_data <- function(location) {
     return (cell_identity_data)
 }
 
-extend_metadata <- function(seurat_data, location){
-    base::tryCatch(
-        expr = {
-            extra_metadata <- utils::read.table(
-                location,
-                sep=get_file_type(location),
-                header=TRUE,
-                check.names=FALSE,
-                stringsAsFactors=FALSE
-            )
-            base::print(base::paste("Extra metadata is successfully loaded from ", location))
-            refactored_metadata <- base::data.frame(SeuratObject::Cells(seurat_data)) %>%      # create a dataframe with only one column
-                                   dplyr::rename("barcode"=1) %>%                        # rename that column to barcode
-                                   dplyr::left_join(extra_metadata, by="barcode") %>%    # intersect with loaded extra metadata by "barcode"
-                                   tibble::remove_rownames() %>%
-                                   tibble::column_to_rownames("barcode") %>%
-                                   replace(is.na(.), "Unknown") %>%             # in case an extra metadata had less barcodes than we had in our Seurat object
-                                   dplyr::rename_with(~base::paste0("custom_", .x))          # add prefix to all extra metadata columns
-            seurat_data <- SeuratObject::AddMetaData(
-                seurat_data,
-                refactored_metadata[Cells(seurat_data), , drop=FALSE]           # to guarantee the proper cells order
-            )
-        },
-        error = function(e){
-            base::print(base::paste("Failed to add extra cells metadata due to", e))
-        },
-        finally = {
-            return (seurat_data)
-        }
+extend_metadata <- function(seurat_data, location, seurat_ref_column, meta_ref_column, seurat_target_columns=NULL){
+    metadata <- utils::read.table(
+        location,
+        sep=get_file_type(location),
+        header=TRUE,
+        check.names=FALSE,
+        stringsAsFactors=FALSE
     )
+    base::print(base::paste("Metadata is successfully loaded from", location))
+    base::print(metadata)
+    seurat_ref_values <- base::as.vector(as.character(seurat_data@meta.data[, seurat_ref_column]))
+    meta_ref_values <- base::as.vector(as.character(metadata[, meta_ref_column]))
+    if (!all(base::sort(meta_ref_values) == base::sort(base::unique(seurat_ref_values)))){
+        base::print("Extra metadata file is malformed. Exiting.")
+        base::quit(save="no", status=1, runLast=FALSE)
+    }
+    meta_source_columns <- base::colnames(metadata)[base::colnames(metadata) != meta_ref_column]        # all except ref column from metadata
+    if (is.null(seurat_target_columns)){
+        seurat_target_columns <- meta_source_columns                                                    # using the names from the metadata file
+    } else if (length(seurat_target_columns) != length(meta_source_columns)){
+        base::print("Provided target column names cannot be used with the loaded metadata. Exiting.")
+        base::quit(save="no", status=1, runLast=FALSE)
+    }
+    for (i in 1:length(meta_source_columns)){
+        current_meta_source_column <- meta_source_columns[i]
+        current_seurat_target_column <- seurat_target_columns[i]
+        base::print(base::paste("Adding", current_meta_source_column, "as", current_seurat_target_column, "column"))
+        seurat_data[[current_seurat_target_column]] <- base::as.factor(                                  # need as.factor, otherwise the order on the plots might be mismatched
+            metadata[[current_meta_source_column]][base::match(seurat_ref_values, meta_ref_values)]
+        )
+    }
+    base::rm(metadata, seurat_ref_values, meta_ref_values)
+    return (seurat_data)
 }
+
+# extend_metadata_by_barcode <- function(seurat_data, location){
+#     base::tryCatch(
+#         expr = {
+#             extra_metadata <- utils::read.table(
+#                 location,
+#                 sep=get_file_type(location),
+#                 header=TRUE,
+#                 check.names=FALSE,
+#                 stringsAsFactors=FALSE
+#             )
+#             base::print(base::paste("Extra metadata is successfully loaded from ", location))
+#             refactored_metadata <- base::data.frame(SeuratObject::Cells(seurat_data)) %>%      # create a dataframe with only one column
+#                                    dplyr::rename("barcode"=1) %>%                        # rename that column to barcode
+#                                    dplyr::left_join(extra_metadata, by="barcode") %>%    # intersect with loaded extra metadata by "barcode"
+#                                    tibble::remove_rownames() %>%
+#                                    tibble::column_to_rownames("barcode") %>%
+#                                    replace(is.na(.), "Unknown") %>%             # in case an extra metadata had less barcodes than we had in our Seurat object
+#                                    dplyr::rename_with(~base::paste0("custom_", .x))          # add prefix to all extra metadata columns
+#             seurat_data <- SeuratObject::AddMetaData(
+#                 seurat_data,
+#                 refactored_metadata[Cells(seurat_data), , drop=FALSE]           # to guarantee the proper cells order
+#             )
+#         },
+#         error = function(e){
+#             base::print(base::paste("Failed to add extra cells metadata due to", e))
+#         },
+#         finally = {
+#             return (seurat_data)
+#         }
+#     )
+# }
 
 load_grouping_data <- function(location, cell_identity_data) {
     default_grouping_data <- base::data.frame(
@@ -357,4 +408,87 @@ replace_fragments <- function(location, seurat_data){
     )
     Signac::Fragments(seurat_data[["ATAC"]]) <- fragments
     return(seurat_data)
+}
+
+export_gct <- function(counts_data, location){
+    base::tryCatch(
+        expr = {
+            counts_matrix <- base::as.matrix(counts_data)
+            output_stream <- base::file(location, "w")
+            on.exit(base::close(output_stream), add=TRUE)                           # can't put it in 'finally' as there is no access to output_stream variable
+            base::cat(                                                              # construction header of GCT file
+                "#1.2",
+                base::paste(
+                    dim(counts_matrix)[1],
+                    dim(counts_matrix)[2],
+                    sep="\t"
+                ),
+                base::paste(
+                    "Name",
+                    "Description",
+                    base::paste(base::colnames(counts_matrix), collapse="\t"),
+                    sep="\t"
+                ),
+                file=output_stream,
+                sep="\n"
+            )
+            utils::write.table(
+                cbind(
+                    base::row.names(counts_matrix),                                   # gene names
+                    c(rep("na", times=length(base::row.names(counts_data)))),         # the description column will have NA
+                    counts_matrix                                                     # counts data
+                ),
+                file=output_stream,
+                append=TRUE,                                                          # appending to already opened file
+                quote=FALSE,
+                sep="\t",
+                eol="\n",
+                col.names=FALSE,
+                row.names=FALSE
+            )
+            base::print(base::paste("Exporting GCT data to", location, sep=" "))
+        },
+        error = function(e){
+            base::print(base::paste("Failed to export GCT data to", location, sep=" "))
+        }
+    )
+}
+
+export_cls <- function(de_results, location, args){
+    base::tryCatch(
+        expr = {
+            output_stream <- base::file(location, "w")
+            on.exit(base::close(output_stream), add=TRUE)           # can't put it in 'finally' as there is no access to output_stream variable
+            categories <- de_results$sample_data[, args$splitby]    # order already corresponds to the counts table columns
+            base::cat(
+                base::paste(
+                    length(categories),                             # number of datasets
+                    length(base::levels(categories)),               # number of different categories
+                    "1",                                            # should be always 1
+                    sep="\t"
+                ),
+                base::paste(
+                    "#",
+                    base::paste(
+                        base::unique(as.character(categories)),     # preserves the order, but removes duplicates
+                        collapse="\t"
+                    ),
+                    sep="\t"
+                ),
+                base::paste(
+                    base::paste(
+                        as.character(categories),
+                        collapse="\t"
+                    ),
+                    sep="\t"
+                ),
+                file=output_stream,
+                sep="\n"
+            )
+            base::print(base::paste("Exporting CLS data to", location, sep=" "))
+        },
+        error = function(e){
+            base::print(base::paste("Failed to export CLS data to", location, sep=" "))
+        }
+    )
 }

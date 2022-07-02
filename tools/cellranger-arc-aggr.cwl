@@ -233,8 +233,8 @@ label: "Cellranger ARC Aggregate"
 s:name: "Cellranger ARC Aggregate"
 s:alternateName: "Aggregates outputs from multiple runs of Cell Ranger ARC Count Chromatin Accessibility and Gene Expression"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-arc-aggr.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/cellranger-arc-aggr.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

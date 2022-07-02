@@ -12,12 +12,12 @@ requirements:
       Experiment
 - class: EnvVarRequirement
   envDef:
-    R_MAX_VSIZE: $(inputs.vector_memory_limit * 1000000000)
+    R_MAX_VSIZE: $((inputs.vector_memory_limit * 1000000000).toString())
 
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.4
+  dockerPull: biowardrobe2/sc-tools:v0.0.9
 
 
 inputs:
@@ -343,6 +343,14 @@ inputs:
       prefix: "--h5seurat"
     doc: |
       Save Seurat data to h5seurat file.
+      Default: false
+
+  export_h5ad_data:
+    type: boolean?
+    inputBinding:
+      prefix: "--h5ad"
+    doc: |
+      Save Seurat data to h5ad file.
       Default: false
 
   low_memory:
@@ -1537,6 +1545,13 @@ outputs:
     doc: |
       Filtered Seurat data in h5seurat format
 
+  seurat_data_h5ad:
+    type: File?
+    outputBinding:
+      glob: "*_data.h5ad"
+    doc: |
+      Reduced Seurat data in h5ad format
+
   stdout_log:
     type: stdout
 
@@ -1572,8 +1587,8 @@ label: "Single-cell Multiome ATAC and RNA-Seq Filtering Analysis"
 s:name: "Single-cell Multiome ATAC and RNA-Seq Filtering Analysis"
 s:alternateName: "Filters single-cell multiome ATAC and RNA-Seq datasets based on the common QC metrics"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/sc-multiome-filter.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-multiome-filter.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

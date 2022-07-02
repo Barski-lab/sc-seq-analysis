@@ -145,8 +145,8 @@ s:alternateName: |
   Exports clustering results from Cell Ranger Count Gene Expression or Cell Ranger
   Aggregate experiments into compatible with UCSC Cell Browser format
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellbrowser-build-cellranger.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/cellbrowser-build-cellranger.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

@@ -224,8 +224,8 @@ label: "Cell Ranger Count Gene Expression"
 s:name: "Cell Ranger Count Gene Expression"
 s:alternateName: "Quantifies gene expression from a single-cell RNA-Seq library"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/tools/cellranger-count.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/cellranger-count.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

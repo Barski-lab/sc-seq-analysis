@@ -209,8 +209,8 @@ label: "Single-cell RNA-Seq Aggregate"
 s:name: "Single-cell RNA-Seq Aggregate"
 s:alternateName: "Aggregates gene expression data from multiple Single-cell RNA-Seq Alignment experiments"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/workflows/sc-rna-aggregate-wf.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/workflows/sc-rna-aggregate-wf.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

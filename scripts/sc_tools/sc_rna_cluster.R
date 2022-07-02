@@ -227,6 +227,17 @@ export_all_expression_plots <- function(seurat_data, args) {
                     rootname=paste(args$output, "xpr_per_cell_res", current_resolution, current_gene, sep="_"),
                     pdf=args$pdf
                 )
+                graphics$expression_density_plot(
+                    data=seurat_data,
+                    features=current_gene,
+                    reduction="rnaumap",
+                    plot_title=paste("Log normalized gene expression density on cells UMAP. Resolution", current_resolution),
+                    joint=FALSE,
+                    width=800,
+                    height=800,
+                    rootname=paste(args$output, "xpr_per_cell_sgnl_res", current_resolution, current_gene, sep="_"),
+                    pdf=args$pdf
+                )
                 graphics$vln_plot(
                     data=seurat_data,
                     features=current_gene,
@@ -363,6 +374,11 @@ get_args <- function(){
         action="store_true"
     )
     parser$add_argument(
+        "--h5ad",
+        help="Save Seurat data to h5ad file. Default: false",
+        action="store_true"
+    )
+    parser$add_argument(
         "--cbbuild",
         help="Export results to UCSC Cell Browser. Default: false",
         action="store_true"
@@ -483,4 +499,9 @@ io$export_rds(seurat_data, paste(args$output, "_data.rds", sep=""))
 if(args$h5seurat){
     print("Exporting results to h5seurat file")
     io$export_h5seurat(seurat_data, paste(args$output, "_data.h5seurat", sep=""))
+}
+
+if(args$h5ad){
+    print("Exporting results to h5ad file")
+    io$export_h5ad(seurat_data, paste(args$output, "_data.h5ad", sep=""))
 }

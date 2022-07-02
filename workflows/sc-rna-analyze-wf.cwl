@@ -127,18 +127,6 @@ inputs:
       confounding source of variation.
       Default: false
 
-  regress_rna_umi:
-    type: boolean?
-    doc: |
-      Regress UMI per cell counts as a confounding source of variation.
-      Default: false
-
-  regress_genes:
-    type: boolean?
-    doc: |
-      Regress genes per cell counts as a confounding source of variation.
-      Default: false
-
   regress_cellcycle:
     type: boolean?
     doc: |
@@ -624,6 +612,16 @@ outputs:
       Log normalized gene expression on cells UMAP.
       PNG format
 
+  xpr_per_cell_sgnl_res_plot_png:
+    type:
+    - "null"
+    - type: array
+      items: File
+    outputSource: sc_rna_cluster/xpr_per_cell_sgnl_res_plot_png
+    doc: |
+      Log normalized gene expression density on cells UMAP.
+      PNG format
+
   xpr_dnst_res_plot_png:
     type:
     - "null"
@@ -652,6 +650,12 @@ outputs:
     outputSource: sc_rna_cluster/seurat_data_rds
     doc: |
       Processed Seurat data in RDS format
+
+  seurat_data_h5ad:
+    type: File?
+    outputSource: sc_rna_cluster/seurat_data_h5ad
+    doc: |
+      Reduced Seurat data in h5ad format
 
   sc_rna_cluster_stdout_log:
     type: File
@@ -741,8 +745,6 @@ steps:
         default: "sctglm"
       highly_var_genes_count: highly_var_genes_count
       regress_mito_perc: regress_mito_perc
-      regress_rna_umi: regress_rna_umi
-      regress_genes: regress_genes
       regress_cellcycle: regress_cellcycle
       dimensions: dimensions
       low_memory:
@@ -784,6 +786,8 @@ steps:
         default: true
       export_ucsc_cb:
         default: true
+      export_h5ad_data:
+        default: true
       output_prefix:
         default: "s_3"
       parallel_memory_limit: parallel_memory_limit
@@ -803,10 +807,12 @@ steps:
     - cmp_gr_ph_spl_clst_res_plot_png
     - xpr_avg_res_plot_png
     - xpr_per_cell_res_plot_png
+    - xpr_per_cell_sgnl_res_plot_png
     - xpr_dnst_res_plot_png
     - gene_markers_tsv
     - ucsc_cb_html_data
     - seurat_data_rds
+    - seurat_data_h5ad
     - stdout_log
     - stderr_log
 
@@ -823,8 +829,8 @@ s:alternateName: |
   Runs filtering, normalization, scaling, integration (optionally) and
   clustering for a single or aggregated single-cell RNA-Seq datasets
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/workflows/sc-rna-analyze.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/workflows/sc-rna-analyze.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:

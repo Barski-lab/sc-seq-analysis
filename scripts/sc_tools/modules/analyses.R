@@ -1,9 +1,14 @@
 import("dplyr", attach=FALSE)
+import("limma", attach=FALSE)
+import("DAseq", attach=FALSE)
 import("Seurat", attach=FALSE)
 import("Signac", attach=FALSE)
+import("DESeq2", attach=FALSE)
 import("tibble", attach=FALSE)
 import("glmGamPoi", attach=FALSE)  # safety measure. we don't use it directly, but SCTransform with method="glmGamPoi" needs it
+import("S4Vectors", attach=FALSE)
 import("magrittr", `%>%`, attach=TRUE)
+import("SummarizedExperiment", attach=FALSE)
 
 export(
     "rna_analyze",
@@ -19,13 +24,17 @@ export(
     "get_putative_markers",
     "atac_preprocess",
     "atac_analyze",
-    "add_wnn_clusters"
+    "add_wnn_clusters",
+    "rna_de_analyze",
+    "da_analyze",
+    "get_de_sample_data",
+    "get_aggregated_expession"
 )
 
 get_vars_to_regress <- function(seurat_data, args, exclude_columns=NULL) {
     vars_to_regress <- NULL
-    arguments <- c(args$regressmt, args$regressrnaumi,  args$regressgenes, args$regresscellcycle)   # any of then can be also NULL
-    metadata_columns <- c("mito_percentage", "nCount_RNA", "nFeature_RNA", "S.Score&G2M.Score")
+    arguments <- c(args$regressmt, args$regresscellcycle)   # any of then can be also NULL
+    metadata_columns <- c("mito_percentage", "S.Score&G2M.Score")
     for (i in 1:length(arguments)) {
         current_argument <- arguments[i]
         current_column <- metadata_columns[i]
@@ -33,10 +42,20 @@ get_vars_to_regress <- function(seurat_data, args, exclude_columns=NULL) {
             next
         }
         current_column <- base::unlist(base::strsplit(metadata_columns[i], "&"))
-        if ( !all(current_column %in% base::colnames(seurat_data@meta.data)) ){                            # the column doesn't exists in metadata
+        if ( !all(current_column %in% base::colnames(seurat_data@meta.data)) ){             # the column doesn't exists in metadata
             next
         }
         if (current_argument) {
+            if (is.null(vars_to_regress)) {
+                vars_to_regress <- current_column
+            } else {
+                vars_to_regress <- base::append(vars_to_regress, current_column)
+            }
+        }
+    }
+    if (!is.null(args$regressgenes) && length(args$regressgenes) > 0){                      # easier to process regressgenes separately
+        for (i in 1:length(args$regressgenes)){
+            current_column <- base::paste("perc", args$regressgenes[i], sep="_")
             if (is.null(vars_to_regress)) {
                 vars_to_regress <- current_column
             } else {
@@ -694,4 +713,236 @@ atac_analyze <- function(seurat_data, args){
         verbose=FALSE
     )
     return (seurat_data)
+}
+
+get_aggregated_expession <- function(seurat_data, group_by, selected_genes=NULL, slot="counts"){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"        # safety measure
+    SeuratObject::Idents(seurat_data) <- group_by           # will be used by AggregateExpression because by default it's called with group.by="ident"
+    aggregated_seurat_data <- Seurat::AggregateExpression(
+        seurat_data,
+        assays="RNA",                                       # need only RNA assay
+        slot=slot,                                          # for slot="counts" no exponentiation is performed prior to aggregating
+        features=selected_genes,                            # if NULL use all genes
+        return.seurat=TRUE,                                 # summed values are saved in "counts", log-normalized - in "data", and scaled - in "scale.data"
+        verbose=FALSE
+    )
+    SeuratObject::Idents(seurat_data) <- "new.ident"
+    return (aggregated_seurat_data)
+}
+
+get_de_sample_data <- function(seurat_data, samples_order, args){
+    sample_data <- seurat_data@meta.data %>%
+                   dplyr::select(
+                       new.ident,
+                       tidyselect::all_of(args$splitby),
+                       tidyselect::any_of(args$batchby)                                           # use any_of(args$batchby) because it can be NULL
+                   ) %>%
+                   dplyr::distinct() %>%
+                   dplyr::mutate(new.ident=base::factor(new.ident, levels=samples_order)) %>%     # setting levels for new.ident from samples_order
+                   dplyr::arrange(new.ident) %>%                                                  # sorting by levels defined from samples_order
+                   tibble::remove_rownames() %>%
+                   tibble::column_to_rownames("new.ident") %>%
+                   dplyr::mutate_at(colnames(.), base::factor)                                    # DEseq prefers factors
+    sample_data[[args$splitby]] <- stats::relevel(sample_data[[args$splitby]], args$first)        # relevel to have args$first as a base for DESeq comparison
+    base::print(sample_data)
+    return (sample_data)
+}
+
+rna_de_analyze <- function(seurat_data, args, excluded_genes=NULL){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                # safety measure
+    base::print(base::paste("Aggregating gene expression per sample"))
+    selected_genes <- base::as.vector(as.character(base::rownames(seurat_data)))    # all available genes
+    if (!is.null(excluded_genes) && length(excluded_genes) > 0){
+        base::print(base::paste("Excluding", length(excluded_genes), "genes"))
+        selected_genes <- selected_genes[!(selected_genes %in% excluded_genes)]
+    }
+    aggregated_seurat_data <- get_aggregated_expession(
+        seurat_data,
+        group_by="new.ident",                                                       # aggregating by sample
+        selected_genes=selected_genes,
+        slot="counts"                                                               # use not normalized counts
+    )
+    raw_counts <- SeuratObject::GetAssayData(                                       # dgCMatrix
+        aggregated_seurat_data,
+        assay="RNA",                                                                # set assay in case GetAssayData won't take the default value
+        slot="counts"                                                               # we need not normalized counts
+    )
+    sample_data <- get_de_sample_data(                                              # rows will be sorted by columns from raw_counts
+        seurat_data=seurat_data,
+        samples_order=base::unname(raw_counts@Dimnames[[2]]),                       # column names from dgCMatrix
+        args=args
+    )
+    design_formula <- stats::as.formula(
+        base::paste0(
+            "~",
+            base::ifelse(
+                is.null(args$batchby),
+                "",
+                base::paste0(args$batchby, "+")
+            ),
+            args$splitby                                                            # safer to have the condition of interest on the last position
+        )
+    )
+    deseq_data <- DESeq2::DESeqDataSetFromMatrix(
+        countData=raw_counts,
+        colData=sample_data,
+        design=design_formula
+    )
+    if (args$lrt){
+        reduced_formula <- stats::as.formula("~1")
+        if(!is.null(args$batchby)){
+            reduced_formula <- stats::as.formula(base::paste0("~", args$batchby))
+        }
+        base::print(                                                               # see this post for details https://support.bioconductor.org/p/95493/#95572
+            base::paste(
+                "Using LRT test with the design formula", base::paste(design_formula, collapse=" "),
+                "and the reduced formula", base::paste(reduced_formula, collapse=" "),
+                "to calculate p-values."
+            )
+        )
+        deseq_data <- DESeq2::DESeq(
+            deseq_data,
+            test="LRT",
+            reduced=reduced_formula,
+            quiet=TRUE,
+            parallel=TRUE
+        )
+    } else {
+        base::print(
+            base::paste(
+                "Using Wald test with the design formula", base::paste(design_formula, collapse=" "),
+                "to calculate p-values."
+            )
+        )
+        deseq_data <- DESeq2::DESeq(
+            deseq_data,
+            quiet=TRUE,
+            parallel=TRUE
+        )
+    }
+    base::print(DESeq2::resultsNames(deseq_data))
+    de_genes <- DESeq2::results(
+        deseq_data,
+        contrast=c(args$splitby, args$second, args$first),            # we are interested in seconds vs first fold change values
+        alpha=base::ifelse(is.null(args$alpha), 0.1, args$alpha),     # recommended to set to our FDR threshold https://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
+        parallel=TRUE
+    )
+    base::print(S4Vectors::mcols(de_genes))
+    de_genes <- base::as.data.frame(de_genes) %>%
+                stats::na.omit() %>%                           # exclude all rows where NA is found in any column. See http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA
+                tibble::rownames_to_column(var="gene")
+    base::print(
+        base::paste(
+            "Number of DE genes after excluding 'NA':", base::nrow(de_genes)
+        )
+    )
+
+    vsd <- DESeq2::vst(deseq_data)
+    vst_counts <- SummarizedExperiment::assay(vsd)[de_genes$gene, ]
+    if(!is.null(args$batchby)){
+        base::print("Removing batch effect from the vst normalized counts")
+        vst_counts <- limma::removeBatchEffect(
+            vst_counts,
+            batch=vsd[[args$batchby]],
+            design=stats::model.matrix(stats::as.formula(base::paste("~",args$splitby)), sample_data)  # should include only splitby
+        )[de_genes$gene, ]
+    }
+    base::print("VST normalized counts data for DE genes")
+    base::print(utils::head(vst_counts))
+
+    base::rm(raw_counts, aggregated_seurat_data, selected_genes, vsd)                       # remove unused data
+    base::gc(verbose=FALSE)
+    return (
+        list(
+            de_genes=de_genes,
+            de_data=deseq_data,
+            sample_data=sample_data,  # return sample_data even if we can get the same as colData(de_data)
+            vst_counts=vst_counts     # with remove by limma batch effect if args$batchby was provided
+        )
+    )
+}
+
+da_analyze <- function(seurat_data, args){
+    SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                # safety measure
+    SeuratObject::Idents(seurat_data) <- "new.ident"                                # safety measure
+    base::print("Defining experimental design")
+    idents <- base::as.vector(as.character(SeuratObject::Idents(seurat_data)))
+    sample_data <- get_de_sample_data(
+        seurat_data=seurat_data,
+        samples_order=unique(idents),                                               # we don't really care about idents order here
+        args=args
+    )
+    first_group <- base::as.vector(
+        as.character(
+            rownames(sample_data[sample_data[[args$splitby]] == args$first, , drop=FALSE])
+        )
+    )
+    second_group <- base::as.vector(
+        as.character(
+            rownames(sample_data[sample_data[[args$splitby]] == args$second, , drop=FALSE])
+        )
+    )
+    base::print(
+        base::paste(
+            "First group of cells identities:", base::paste(first_group, collapse=", ")
+        )
+    )
+    base::print(
+        base::paste(
+            "Second group of cells identities:", base::paste(second_group, collapse=", ")
+        )
+    )
+    embeddings <- SeuratObject::Embeddings(
+        seurat_data,
+        reduction=args$reduction
+    )
+    embeddings <- embeddings[, args$dimensions]   # subset to specific dimensions
+    base::print("Selected embeddings")
+    base::print(utils::head(embeddings))
+
+    da_cells <- DAseq::getDAcells(
+        X=embeddings,
+        cell.labels=idents,
+        labels.1=first_group,
+        labels.2=second_group,
+        pred.thres=args$ranges,                   # if NULL, will be calculated automatically
+        k.vector=args$knn,                        # if NULL, will be calculated based on the cells number
+        n.runs=5,                                 # the same as default value
+        n.rand=5,                                 # instead of default 2
+        do.plot=TRUE                              # will save only rand.plot
+    )
+
+    # DA-seq computes for each cell a score based on the relative prevalence of cells from both biological
+    # states in the cell’s neighborhood. DA score measures of how much a cell’s neighborhood is dominated
+    # by cells from one of the biological states
+    da_sufix <- base::paste0(args$second, "_vs_", args$first)
+    seurat_data[[base::paste("custom", "da_score", da_sufix, sep="_")]] <- da_cells$da.pred
+
+    for (i in 1:length(args$resolution)) {
+        current_resolution <- args$resolution[i]
+        base::print(base::paste("Identifying DA subpopulations using resolution", current_resolution))
+        # DA-seq clusters the cells whose DA measure is above or below a certain threshold
+        da_regions <- DAseq::getDAregion(
+            X=embeddings,
+            da.cells=da_cells,
+            cell.labels=idents,
+            labels.1=first_group,
+            labels.2=second_group,
+            resolution=current_resolution
+        )
+        seurat_data[[base::paste0("da_", da_sufix, "_res.", current_resolution)]] <- da_regions$da.region.label
+        base::print(da_regions$DA.stat)
+        base::rm(da_regions)
+    }
+
+    base::rm(idents, sample_data, first_group, second_group, embeddings)         # remove unused data
+    base::gc(verbose=FALSE)
+    return (
+        list(
+            seurat_data=seurat_data,
+            da_cells=da_cells,
+            thresholds=c(max(unlist(da_cells$rand.pred)), min(unlist(da_cells$rand.pred)))
+        )
+    )
 }

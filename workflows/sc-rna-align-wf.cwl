@@ -259,8 +259,8 @@ label: "Single-cell RNA-Seq Alignment"
 s:name: "Single-cell RNA-Seq Alignment"
 s:alternateName: "Runs Cell Ranger Count to quantify gene expression from a single-cell RNA-Seq library"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/scRNA-Seq-Analysis/main/workflows/sc-rna-align-wf.cwl
-s:codeRepository: https://github.com/Barski-lab/scRNA-Seq-Analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/workflows/sc-rna-align-wf.cwl
+s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
