@@ -28,6 +28,10 @@ CWL tools can be combined into the workflows depending on the type of input data
 
 ![](https://raw.githubusercontent.com/michael-kotliar/sc-seq-analysis-wiki-data/main/readme/scheme.gif)
 
+All CWL tools are divided into groups to cover the major steps of data analysis. For integrity reasons we recommend starting from the raw FASTQ files and use one of the Cell Ranger based pipelines from the *Data preprocessing* group. The results of these pipelines can be optionally exported into [UCSC Cell Browser](https://cellbrowser.readthedocs.io/en/master/) (see *Visualization* group).
+
+Both *sc-rna-filter.cwl* and *sc-multiome-filter.cwl* tools use feature-barcode matrices as the main inputs. All other tools from the *scRNA-Seq*, *scATAC-Seq and Multiome*, and *Secondary analyses* groups exchange data through [RDS](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/readRDS) files.
+
 **Data preprocessing**
 | Name                                 | Description  |
 |:-------------------------------------|:-------------|
