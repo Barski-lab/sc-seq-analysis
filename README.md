@@ -76,7 +76,7 @@ Both *sc-rna-filter.cwl* and *sc-multiome-filter.cwl* tools use feature-barcode 
 | [tar-extract.cwl](./tools/tar-extract.cwl)                                          | Extracts the content of TAR file into a folder |
 | [tar-compress.cwl](./tools/tar-compress.cwl)                                        | Creates compressed TAR file from a folder |
 
-**scRNA-Seq workflows examples**
+**Workflow examples for scRNA-Seq analysis**
 | Name                                 | Description  |
 |:-------------------------------------|:-------------|
 | [sc-ref-indices-wf.cwl](./workflows/sc-ref-indices-wf.cwl) | Builds a Cell Ranger and Cell Ranger ARC compatible reference folders from the custom genome FASTA and gene GTF annotation files |
@@ -84,7 +84,7 @@ Both *sc-rna-filter.cwl* and *sc-multiome-filter.cwl* tools use feature-barcode 
 | [sc-rna-aggregate-wf.cwl](./workflows/sc-rna-aggregate-wf.cwl) | Aggregates gene expression data from multiple Single-cell RNA-Seq Alignment experiments |
 | [sc-rna-analyze-wf.cwl](./workflows/sc-rna-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell RNA-Seq datasets |
 
-**Multiome workflows examples**
+**Workflows examples for Multiome analysis**
 | Name                                 | Description  |
 |:-------------------------------------|:-------------|
 | [sc-multiome-align-wf.cwl](./workflows/sc-multiome-align-wf.cwl) | Runs Cell Ranger ARC Count to quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC and RNA-Seq library |
