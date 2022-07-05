@@ -18,8 +18,13 @@ https://doi.org/10.1016/j.xpro.2021.100989*
 - [Docker](https://www.docker.com/) or [Singularity](https://sylabs.io/) container runtime environment
 
 --------
+**How to use it**
 
-This repository contains R scripts and CWL tools for single-cell RNA-Seq and Multiome data analyses. Tools can be combined into the workflows depending on the type of input datasets and required complexity of the analysis. For example, for single-cell RNA-Seq use 1(a) – 2(a) – 3(a) and optionally 4(a) – 5(a,b); for Multiome ATAC-Seq and RNA-Seq use 1(b) – 2(b) – 2(a) – 3(a) - 3(b) - 3(c) and optionally 4(a) – 5(a,b).
+This repository contains R [scripts](./scripts/sc_tools), CWL [tools](./tools) and examples of CWL [workflows](./workflows) for single-cell RNA-Seq and Multiome data analyses.
+
+Each R script can be run directly from the command line following the `--help` message instructions. However, to guarantee results reproducibility we containerized them and wrapped in CWL format.
+
+CWL tools can be combined into the workflows depending on the type of input datasets and required complexity of the analysis. For example, for single-cell RNA-Seq use **1(a) – 2(a) – 3(a)** and optionally **4(a) – 5(a,b)**; for Multiome ATAC-Seq and RNA-Seq use **1(b) – 2(b) – 2(a) – 3(a) - 3(b) - 3(c)** and optionally **4(a) – 5(a,b)**.
 
 ![](https://raw.githubusercontent.com/michael-kotliar/sc-seq-analysis-wiki-data/main/readme/scheme.gif)
 
