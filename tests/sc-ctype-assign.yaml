@@ -1,0 +1,21 @@
+query_data_rds:
+  class: File
+  location: ./data/outputs/sc_rna_cluster/sc_rna_cluster_data.rds
+cell_type_data:
+  class: File
+  location: ./data/outputs/sc_ctype_assign/cell_types.tsv
+query_source_column: rna_res.0.5
+query_target_column: ctype_res.0.5
+genes_of_interest:
+- Clec3b
+- Il6
+- Lgals7
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+output_prefix: "sc_ctype_assign"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2

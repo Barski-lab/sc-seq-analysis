@@ -1,0 +1,24 @@
+feature_bc_matrices_folder:
+  class: Directory
+  location: ./data/inputs/filtered_feature_bc_matrix
+aggregation_metadata:
+  class: File
+  location: ./data/inputs/aggregation.csv
+grouping_data:
+  class: File
+  location: ./data/inputs/condition.csv
+rna_minimum_cells: 10
+minimum_genes: 300
+maximum_genes: 6200
+rna_minimum_umi: 500
+minimum_novelty_score: 0.8
+mito_pattern: ^mt-
+maximum_mito_perc: 5
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+output_prefix: "sc_rna_filter"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2

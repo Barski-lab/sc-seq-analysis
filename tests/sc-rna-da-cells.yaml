@@ -1,0 +1,21 @@
+query_data_rds:
+  class: File
+  location: ./data/outputs/sc_ctype_assign/sc_ctype_assign_data.rds
+reduction: pca
+dimensions: 20
+splitby: condition
+first_cond: KPPC
+second_cond: KPPCN
+resolution: 0.01
+ranges:
+- -0.5
+- 0.5
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+output_prefix: "sc_rna_da_cells"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2
