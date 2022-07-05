@@ -1,12 +1,12 @@
 feature_bc_matrices_folder:
   class: Directory
-  location: ./data/inputs/filtered_feature_bc_matrix
+  location: ./data/rna_inputs/filtered_feature_bc_matrix
 aggregation_metadata:
   class: File
-  location: ./data/inputs/aggregation.csv
+  location: ./data/rna_inputs/aggregation.csv
 grouping_data:
   class: File
-  location: ./data/inputs/condition.csv
+  location: ./data/rna_inputs/condition.csv
 rna_minimum_cells: 10
 minimum_genes: 300
 maximum_genes: 6200

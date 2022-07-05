@@ -1,9 +1,9 @@
 query_data_rds:
   class: File
-  location: ./data/outputs/sc_rna_filter/sc_rna_filter_data.rds
+  location: ./data/rna_outputs/sc_rna_filter/sc_rna_filter_data.rds
 cell_cycle_data:
   class: File
-  location: ./data/inputs/mouse_cell_cycle_genes.csv
+  location: ./data/rna_inputs/mouse_cell_cycle_genes.csv
 normalization_method: sctglm
 integration_method: seurat
 highly_var_genes_count: 3000

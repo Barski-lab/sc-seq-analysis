@@ -1,6 +1,6 @@
 query_data_rds:
   class: File
-  location: ./data/outputs/sc_rna_reduce/sc_rna_reduce_data.rds
+  location: ./data/rna_outputs/sc_rna_reduce/sc_rna_reduce_data.rds
 dimensions: 20
 resolution: 0.5
 genes_of_interest:

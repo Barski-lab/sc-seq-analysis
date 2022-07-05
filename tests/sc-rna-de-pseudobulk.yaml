@@ -1,6 +1,6 @@
 query_data_rds:
   class: File
-  location: ./data/outputs/sc_ctype_assign/sc_ctype_assign_data.rds
+  location: ./data/rna_outputs/sc_ctype_assign/sc_ctype_assign_data.rds
 splitby: condition
 first_cond: KPPC
 second_cond: KPPCN
