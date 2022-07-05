@@ -13,6 +13,10 @@
 - *Aizhan Surumbayeva, Michael Kotliar, Linara Gabitova-Cornell, Andrey Kartashov, Suraj Peri, Nathan Salomonis, Artem Barski, Igor Astsaturov, Preparation of mouse pancreatic tumor for single-cell RNA sequencing and analysis of the data, STAR Protocols, Volume 2, Issue 4, 2021, 100989, ISSN 2666-1667,
 https://doi.org/10.1016/j.xpro.2021.100989*
 
+**Minimum software requirements:**
+- [cwltool](https://github.com/common-workflow-language/cwltool) or alternative CWL runner supporting v1.0
+- [Docker](https://www.docker.com/) or [Singularity](https://sylabs.io/) container runtime environment
+
 --------
 
 This repository contains R scripts and CWL tools for single-cell RNA-Seq and Multiome data analyses. Tools can be combined into the workflows depending on the type of input datasets and required complexity of the analysis. For example, for single-cell RNA-Seq use 1(a) – 2(a) – 3(a) and optionally 4(a) – 5(a,b); for Multiome ATAC-Seq and RNA-Seq use 1(b) – 2(b) – 2(a) – 3(a) - 3(b) - 3(c) and optionally 4(a) – 5(a,b).
