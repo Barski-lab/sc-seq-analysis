@@ -19,34 +19,61 @@ This repository contains R scripts and CWL tools for single-cell RNA-Seq and Mul
 
 ![](https://raw.githubusercontent.com/michael-kotliar/sc-seq-analysis-wiki-data/main/readme/scheme.gif)
 
-**Complete list of the available CWL workflows**
+**Data preprocessing**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [cellranger-mkref.cwl](./tools/cellranger-mkref.cwl)                                | Builds Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files |
+| [cellranger-count.cwl](./tools/cellranger-count.cwl)                                | Quantifies gene expression from a single-cell RNA-Seq library |
+| [cellranger-aggr.cwl](./tools/cellranger-aggr.cwl)                                  | Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression |
+| [cellranger-arc-mkref.cwl](./tools/cellranger-arc-mkref.cwl)                        | Builds Cell Ranger ARC compatible reference folder from the custom genome FASTA and gene GTF annotation files |
+| [cellranger-arc-count.cwl](./tools/cellranger-arc-count.cwl)                        | Quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC/RNA-Seq library |
+| [cellranger-arc-aggr.cwl](./tools/cellranger-arc-aggr.cwl)                          | Aggregates outputs from multiple runs of Cell Ranger ARC Count Chromatin Accessibility and Gene Expression |
+
+**Visualization**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [cellbrowser-build-cellranger.cwl](./tools/cellbrowser-build-cellranger.cwl)        | Exports clustering results from Cell Ranger Count Gene Expression and Cell Ranger Aggregate experiments into compatible with UCSC Cell Browser format |
+| [cellbrowser-build-cellranger-arc.cwl](./tools/cellbrowser-build-cellranger-arc.cwl) | Exports clustering results from Cell Ranger ARC Count Chromatin Accessibility and Gene Expression or Cell Ranger ARC Aggregate experiments into compatible with UCSC Cell Browser format |
+
+**scRNA-Seq**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [sc-rna-filter.cwl](./tools/sc-rna-filter.cwl)                                      | Filters single-cell RNA-Seq datasets based on the common QC metrics |
+| [sc-rna-reduce.cwl](./tools/sc-rna-reduce.cwl)                                      | Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA |
+| [sc-rna-cluster.cwl](./tools/sc-rna-cluster.cwl)                                    | Clusters single-cell RNA-Seq datasets, identifies gene markers |
+
+**scATAC-Seq and Multiome**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [sc-multiome-filter.cwl](./tools/sc-multiome-filter.cwl)                            | Filters single-cell multiome ATAC-Seq and RNA-Seq datasets based on the common QC metrics |
+| [sc-atac-reduce.cwl](./tools/sc-atac-reduce.cwl)                                    | Integrates multiple single-cell ATAC-Seq datasets, reduces dimensionality using LSI |
+| [sc-atac-cluster.cwl](./tools/sc-atac-cluster.cwl)                                  | Clusters single-cell ATAC-Seq datasets, identifies differentially accessible peaks |
+| [sc-wnn-cluster.cwl](./tools/sc-wnn-cluster.cwl)                                    | Clusters multiome ATAC-Seq and RNA-Seq datasets, identifies gene markers and differentially accessible peaks |
+
+**Secondary analyses**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [sc-ctype-assign.cwl](./tools/sc-ctype-assign.cwl)                                  | Assigns cell types for clusters based on the provided metadata file |
+| [sc-rna-de-pseudobulk.cwl](./tools/sc-rna-de-pseudobulk.cwl)                        | Identifies differentially expressed genes between groups of cells coerced to pseudobulk datasets |
+| [sc-rna-da-cells.cwl](./tools/sc-rna-da-cells.cwl)                                  | Detects cell subpopulations with differential abundance between datasets split by biological condition |
+
+**Utilities**
+| Name                                 | Description  |
+|:-------------------------------------|:-------------|
+| [tar-extract.cwl](./tools/tar-extract.cwl)                                          | Extracts the content of TAR file into a folder |
+| [tar-compress.cwl](./tools/tar-compress.cwl)                                        | Creates compressed TAR file from a folder |
+
+**scRNA-Seq workflows examples**
 | Name                                 | Description  |
 |:-------------------------------------|:-------------|
 | [sc-ref-indices-wf.cwl](./workflows/sc-ref-indices-wf.cwl) | Builds a Cell Ranger and Cell Ranger ARC compatible reference folders from the custom genome FASTA and gene GTF annotation files |
 | [sc-rna-align-wf.cwl](./workflows/sc-rna-align-wf.cwl) | Runs Cell Ranger Count to quantify gene expression from a single-cell RNA-Seq library |
 | [sc-rna-aggregate-wf.cwl](./workflows/sc-rna-aggregate-wf.cwl) | Aggregates gene expression data from multiple Single-cell RNA-Seq Alignment experiments |
 | [sc-rna-analyze-wf.cwl](./workflows/sc-rna-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell RNA-Seq datasets |
-| [sc-multiome-align-wf.cwl](./workflows/sc-multiome-align-wf.cwl) | Runs Cell Ranger ARC Count to quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC and RNA-Seq library |
-| [sc-multiome-aggregate-wf.cwl](./workflows/sc-multiome-aggregate-wf.cwl) | Aggregates data from multiple Single-cell Multiome ATAC and RNA-Seq Alignment experiments |
-| [sc-multiome-analyze-wf.cwl](./workflows/sc-multiome-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell Multiome ATAC and RNA-Seq datasets |
 
-**Complete list of the available CWL tools**
+**Multiome workflows examples**
 | Name                                 | Description  |
 |:-------------------------------------|:-------------|
-| [cellranger-mkref.cwl](./tools/cellranger-mkref.cwl)                                | Builds Cell Ranger compatible reference folder from the custom genome FASTA and gene GTF annotation files |
-| [cellranger-count.cwl](./tools/cellranger-count.cwl)                                | Quantifies gene expression from a single-cell RNA-Seq library |
-| [cellranger-aggr.cwl](./tools/cellranger-aggr.cwl)                                  | Aggregates outputs from multiple runs of Cell Ranger Count Gene Expression |
-| [cellbrowser-build-cellranger.cwl](./tools/cellbrowser-build-cellranger.cwl)        | Exports clustering results from Cell Ranger Count Gene Expression and Cell Ranger Aggregate experiments into compatible with UCSC Cell Browser format |
-| [cellranger-arc-mkref.cwl](./tools/cellranger-arc-mkref.cwl)                        | Builds Cell Ranger ARC compatible reference folder from the custom genome FASTA and gene GTF annotation files |
-| [cellranger-arc-count.cwl](./tools/cellranger-arc-count.cwl)                        | Quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC/RNA-Seq library |
-| [cellranger-arc-aggr.cwl](./tools/cellranger-arc-aggr.cwl)                          | Aggregates outputs from multiple runs of Cell Ranger ARC Count Chromatin Accessibility and Gene Expression |
-| [cellbrowser-build-cellranger-arc.cwl](./tools/cellbrowser-build-cellranger-arc.cwl) | Exports clustering results from Cell Ranger ARC Count Chromatin Accessibility and Gene Expression or Cell Ranger ARC Aggregate experiments into compatible with UCSC Cell Browser format |
-| [sc-rna-filter.cwl](./tools/sc-rna-filter.cwl)                                      | Filters single-cell RNA-Seq datasets based on the common QC metrics |
-| [sc-rna-reduce.cwl](./tools/sc-rna-reduce.cwl)                                      | Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA |
-| [sc-rna-cluster.cwl](./tools/sc-rna-cluster.cwl)                                    | Clusters single-cell RNA-Seq datasets, identifies gene markers |
-| [sc-multiome-filter.cwl](./tools/sc-multiome-filter.cwl)                            | Filters single-cell multiome ATAC and RNA-Seq datasets based on the common QC metrics |
-| [sc-atac-reduce.cwl](./tools/sc-atac-reduce.cwl)                                    | Integrates multiple single-cell ATAC-Seq datasets, reduces dimensionality using LSI |
-| [sc-atac-cluster.cwl](./tools/sc-atac-cluster.cwl)                                  | Clusters single-cell ATAC-Seq datasets, identifies differentially accessible peaks |
-| [sc-wnn-cluster.cwl](./tools/sc-wnn-cluster.cwl)                                    | Clusters multiome ATAC and RNA-Seq datasets, identifies gene markers and differentially accessible peaks |
-| [tar-extract.cwl](./tools/tar-extract.cwl)                                          | Extracts the content of TAR file into a folder |
-| [tar-compress.cwl](./tools/tar-compress.cwl)                                        | Creates compressed TAR file from a folder |
+| [sc-multiome-align-wf.cwl](./workflows/sc-multiome-align-wf.cwl) | Runs Cell Ranger ARC Count to quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC and RNA-Seq library |
+| [sc-multiome-aggregate-wf.cwl](./workflows/sc-multiome-aggregate-wf.cwl) | Aggregates data from multiple Single-cell Multiome ATAC and RNA-Seq Alignment experiments |
+| [sc-multiome-analyze-wf.cwl](./workflows/sc-multiome-analyze-wf.cwl) | Runs filtering, normalization, scaling, integration (optionally) and clustering for a single or aggregated single-cell Multiome ATAC-Seq and RNA-Seq datasets |
