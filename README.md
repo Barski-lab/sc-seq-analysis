@@ -40,7 +40,7 @@ This repository contains R scripts and CWL tools for single-cell RNA-Seq and Mul
 | [cellranger-arc-mkref.cwl](./tools/cellranger-arc-mkref.cwl)                        | Builds Cell Ranger ARC compatible reference folder from the custom genome FASTA and gene GTF annotation files |
 | [cellranger-arc-count.cwl](./tools/cellranger-arc-count.cwl)                        | Quantifies chromatin accessibility and gene expression from a single-cell Multiome ATAC/RNA-Seq library |
 | [cellranger-arc-aggr.cwl](./tools/cellranger-arc-aggr.cwl)                          | Aggregates outputs from multiple runs of Cell Ranger ARC Count Chromatin Accessibility and Gene Expression |
-| [cellbrowser-build-cellranger-arc.cwl](./tool/cellbrowser-build-cellranger-arc.cwl) | Exports clustering results from Cell Ranger ARC Count Chromatin Accessibility and Gene Expression or Cell Ranger ARC Aggregate experiments into compatible with UCSC Cell Browser format |
+| [cellbrowser-build-cellranger-arc.cwl](./tools/cellbrowser-build-cellranger-arc.cwl) | Exports clustering results from Cell Ranger ARC Count Chromatin Accessibility and Gene Expression or Cell Ranger ARC Aggregate experiments into compatible with UCSC Cell Browser format |
 | [sc-rna-filter.cwl](./tools/sc-rna-filter.cwl)                                      | Filters single-cell RNA-Seq datasets based on the common QC metrics |
 | [sc-rna-reduce.cwl](./tools/sc-rna-reduce.cwl)                                      | Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA |
 | [sc-rna-cluster.cwl](./tools/sc-rna-cluster.cwl)                                    | Clusters single-cell RNA-Seq datasets, identifies gene markers |
