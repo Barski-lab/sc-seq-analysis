@@ -45,3 +45,14 @@ WORKING_DIR="${BASE_DIR}/data/multiome_outputs/sc_wnn_cluster"
 mkdir -p $WORKING_DIR && cd $WORKING_DIR
 echo "Running sc-wnn-cluster.cwl in ${WORKING_DIR} directory."
 cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-wnn-cluster.cwl" "$JOBS_DIR/sc-wnn-cluster.yaml"
+
+CLUSTERS=($(seq 0 1 $(cut -f 2 $WORKING_DIR/sc_wnn_cluster_gene_markers.tsv | grep -v "cluster" | sort -n -u |  tail -n 1)))
+WORKING_DIR="${BASE_DIR}/data/multiome_outputs/sc_ctype_assign"
+mkdir -p $WORKING_DIR && cd $WORKING_DIR
+echo -e "cluster\tctype" > cell_types.tsv
+for i in ${CLUSTERS[@]}
+do
+    echo -e "$i\tctype_$i" >> cell_types.tsv
+done
+echo "Running sc-ctype-assign.cwl in ${WORKING_DIR} directory."
+cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-ctype-assign.cwl" "$JOBS_DIR/sc-ctype-assign.yaml"

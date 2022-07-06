@@ -1,0 +1,21 @@
+query_data_rds:
+  class: File
+  location: ./data/multiome_outputs/sc_wnn_cluster/sc_wnn_cluster_data.rds
+cell_type_data:
+  class: File
+  location: ./data/multiome_outputs/sc_ctype_assign/cell_types.tsv
+query_source_column: wnn_res.0.5
+query_target_column: ctype_res.0.5
+genes_of_interest:
+- CD4
+- SELL
+- ITGA1
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+output_prefix: "sc_ctype_assign"
+parallel_memory_limit: 14
+vector_memory_limit: 32
+threads: 2

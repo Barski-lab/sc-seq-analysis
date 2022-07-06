@@ -28,15 +28,16 @@ mkdir -p $WORKING_DIR && cd $WORKING_DIR
 echo "Running sc-rna-cluster.cwl in ${WORKING_DIR} directory."
 cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-rna-cluster.cwl" "$JOBS_DIR/sc-rna-cluster-1.yaml"
 
+CLUSTERS=($(seq 0 1 $(cut -f 2 $WORKING_DIR/sc_rna_cluster_gene_markers.tsv | grep -v "cluster" | sort -n -u |  tail -n 1)))
 WORKING_DIR="${BASE_DIR}/data/rna_outputs/sc_ctype_assign"
 mkdir -p $WORKING_DIR && cd $WORKING_DIR
 echo -e "cluster\tctype" > cell_types.tsv
-for i in {0..18}
+for i in ${CLUSTERS[@]}
 do
     echo -e "$i\tctype_$i" >> cell_types.tsv
 done
 echo "Running sc-ctype-assign.cwl in ${WORKING_DIR} directory."
-cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-ctype-assign.cwl" "$JOBS_DIR/sc-ctype-assign.yaml"
+cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-ctype-assign.cwl" "$JOBS_DIR/sc-ctype-assign-1.yaml"
 
 WORKING_DIR="${BASE_DIR}/data/rna_outputs/sc_rna_de_pseudobulk"
 mkdir -p $WORKING_DIR && cd $WORKING_DIR
