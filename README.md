@@ -7,6 +7,7 @@
 **Notes:**
 - For details on how to use the published version ***[v1.0.1](https://github.com/Barski-lab/scRNA-Seq-Analysis/tree/v1.0.1)*** of workflows for scRNA-Seq data analysis in ***[SciDAP](https://scidap.com/)*** refer to the ***[Tutorials](https://barski-lab.github.io/sc-seq-analysis/)*** page.
 - For up to date workflow description see ***[Wiki](https://github.com/Barski-lab/sc-seq-analysis/wiki)*** page.
+- Although, we eager to make our pipelines as reproducible as possible, certain issues with [Seurat](https://satijalab.org/seurat/index.html) may affect the reproducibility even for containerized tools (see [Reproducibility issue #5358](https://github.com/satijalab/seurat/issues/5358))
 
 **Publications:**
 
