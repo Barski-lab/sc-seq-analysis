@@ -1,0 +1,18 @@
+query_data_rds:
+  class: File
+  location: ./data/multiome_outputs/sc_atac_cluster/sc_atac_cluster_data.rds
+normalization_method: sctglm
+integration_method: seurat
+highly_var_genes_count: 3000
+regress_mito_perc: true
+dimensions: 20
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+low_memory: true
+output_prefix: "sc_rna_reduce"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2

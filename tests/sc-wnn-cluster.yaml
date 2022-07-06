@@ -1,0 +1,25 @@
+query_data_rds:
+  class: File
+  location: ./data/rmultiome_outputs/sc_rna_cluster/sc_rna_cluster_data.rds
+rna_dimensions: 20
+atac_dimensions: 20
+resolution: 0.5
+atac_fragments_file:
+  class: File
+  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
+genes_of_interest:
+- CD4
+- SELL
+- ITGA1
+identify_diff_genes: true
+identify_diff_peaks: true
+only_positive_diff_genes: true
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+output_prefix: "sc_wnn_cluster"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2

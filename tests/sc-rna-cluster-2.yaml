@@ -1,0 +1,20 @@
+query_data_rds:
+  class: File
+  location: ./data/multiome_outputs/sc_rna_reduce/sc_rna_reduce_data.rds
+dimensions: 20
+resolution: 0.5
+genes_of_interest:
+- CD4
+- SELL
+- ITGA1
+identify_diff_genes: true
+only_positive_diff_genes: true
+export_pdf_plots: true
+verbose: true
+export_h5seurat_data: true
+export_h5ad_data: true
+export_ucsc_cb: true
+output_prefix: "sc_rna_cluster"
+parallel_memory_limit: 8
+vector_memory_limit: 20
+threads: 2
