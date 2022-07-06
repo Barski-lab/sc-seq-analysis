@@ -8,7 +8,7 @@
 # Website:          https://github.com/Barski-lab/workflows
 # Provides:         set of R scripts for single-cell data analysis
 # Base Image:       satijalab/seurat:4.0.6
-# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.9 -f sc-tools-Dockerfile .
+# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.9 .
 # Pull Cmd:         docker pull biowardrobe2/sc-tools:v0.0.9
 # Run Cmd:          docker run --rm -ti biowardrobe2/sc-tools:v0.0.9 /bin/bash
 ##########################################################################################################
