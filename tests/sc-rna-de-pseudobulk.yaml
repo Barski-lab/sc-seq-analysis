@@ -9,6 +9,6 @@ subset: ctype_0
 export_pdf_plots: true
 verbose: true
 output_prefix: "sc_rna_de_pseudobulk"
-parallel_memory_limit: 8
-vector_memory_limit: 20
+parallel_memory_limit: 14
+vector_memory_limit: 32
 threads: 2

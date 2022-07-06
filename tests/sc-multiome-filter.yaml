@@ -28,6 +28,6 @@ verbose: true
 export_h5seurat_data: true
 export_h5ad_data: true
 output_prefix: "sc_multiome_filter"
-parallel_memory_limit: 8
-vector_memory_limit: 20
+parallel_memory_limit: 14
+vector_memory_limit: 32
 threads: 2

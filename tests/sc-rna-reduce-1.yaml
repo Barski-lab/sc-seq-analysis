@@ -16,6 +16,6 @@ export_h5ad_data: true
 export_ucsc_cb: true
 low_memory: true
 output_prefix: "sc_rna_reduce"
-parallel_memory_limit: 8
-vector_memory_limit: 20
+parallel_memory_limit: 14
+vector_memory_limit: 32
 threads: 2
