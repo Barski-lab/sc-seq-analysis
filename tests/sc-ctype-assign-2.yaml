@@ -4,7 +4,7 @@ query_data_rds:
 cell_type_data:
   class: File
   location: ./data/multiome_outputs/sc_ctype_assign/cell_types.tsv
-query_source_column: wnn_res.0.5
+query_source_column: wsnn_res.0.5
 query_target_column: ctype_res.0.5
 genes_of_interest:
 - CD4
