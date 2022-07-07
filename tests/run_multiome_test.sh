@@ -55,4 +55,4 @@ do
     echo -e "$i\tctype_$i" >> cell_types.tsv
 done
 echo "Running sc-ctype-assign.cwl in ${WORKING_DIR} directory."
-cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-ctype-assign.cwl" "$JOBS_DIR/sc-ctype-assign.yaml"
+cwltool --tmpdir-prefix $TMP_DIR_PREFIX --tmp-outdir-prefix $TMP_DIR_PREFIX --debug "$TOOLS_DIR/sc-ctype-assign.cwl" "$JOBS_DIR/sc-ctype-assign-2.yaml"

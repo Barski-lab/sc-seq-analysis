@@ -1,12 +1,12 @@
 query_data_rds:
   class: File
-  location: ./data/rmultiome_outputs/sc_rna_cluster/sc_rna_cluster_data.rds
+  location: ./data/multiome_outputs/sc_rna_cluster/sc_rna_cluster_data.rds
 rna_dimensions: 20
 atac_dimensions: 20
 resolution: 0.5
 atac_fragments_file:
   class: File
-  location: pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
+  location: ./data/multiome_inputs/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz
 genes_of_interest:
 - CD4
 - SELL
