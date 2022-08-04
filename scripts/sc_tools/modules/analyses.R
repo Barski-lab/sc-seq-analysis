@@ -4,6 +4,7 @@ import("DAseq", attach=FALSE)
 import("Seurat", attach=FALSE)
 import("Signac", attach=FALSE)
 import("DESeq2", attach=FALSE)
+import("harmony", attach=FALSE)
 import("tibble", attach=FALSE)
 import("glmGamPoi", attach=FALSE)  # safety measure. we don't use it directly, but SCTransform with method="glmGamPoi" needs it
 import("S4Vectors", attach=FALSE)
@@ -75,6 +76,7 @@ get_cell_cycle_scores <- function(seurat_data, assay, cell_cycle_data){   # we n
         assay=assay,
         verbose=FALSE
     )
+    # seurat_data[["CC.Diff"]] <- seurat_data[["S.Score"]] - seurat_data[["G2M.Score"]]   # for softer cell cycle removal (https://satijalab.org/seurat/articles/cell_cycle_vignette.html)
     return (seurat_data)
 }
 
@@ -103,7 +105,7 @@ rna_log_single <- function(seurat_data, args, cell_cycle_data=NULL){
         verbose=FALSE
     )
     vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)                           # may or may not include S.Score and G2M.Score columns
-    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    base::print(base::paste0("Regressing out [", paste(vars_to_regress, collapse=", "), "]"))
     scaled_norm_seurat_data <- Seurat::ScaleData(
         scaled_norm_seurat_data,
         vars.to.regress=vars_to_regress,
@@ -118,10 +120,10 @@ rna_sct_single <- function(seurat_data, args, cell_cycle_data=NULL){
     method <- base::ifelse(args$norm=="sctglm", "glmGamPoi", "poisson")
     vars_to_regress <- get_vars_to_regress(seurat_data, args)                       # will never include "S.Score", "G2M.Score" columns as cell cycle scores are not assigned
     base::print(
-        base::paste(
-            "Applying SCTransform using", method,
-            "method for initial parameter estimation.",
-            "Regressing out", paste(vars_to_regress, collapse=", ")
+        base::paste0(
+            "Applying SCTransform using ", method,
+            " method for initial parameter estimation. ",
+            "Regressing out [", paste(vars_to_regress, collapse=", "), "]"
         )
     )
     scaled_norm_seurat_data <- Seurat::SCTransform(
@@ -143,27 +145,29 @@ rna_sct_single <- function(seurat_data, args, cell_cycle_data=NULL){
                     "SCT",
                     cell_cycle_data
                 )
-                vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)   # will include S.Score and G2M.Score
-                base::print(
-                    base::paste(
-                        "Re-applying SCTransform using", method,
-                        "method for initial parameter estimation.",
-                        "Regressing out", paste(vars_to_regress, collapse=", ")
+                vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)   # may include S.Score and G2M.Score if run with --regresscellcycle
+                if (all(c("S.Score", "G2M.Score") %in% vars_to_regress)){               # need to rerun SCTransform to regress all variables at once
+                    base::print(
+                        base::paste0(
+                            "Re-applying SCTransform using ", method,
+                            " method for initial parameter estimation. ",
+                            "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
+                        )
                     )
-                )
-                scaled_norm_seurat_data <- Seurat::SCTransform(
-                    seurat_data,
-                    assay="RNA",
-                    new.assay.name="SCT",
-                    variable.features.n=args$highvargenes,
-                    method=method,
-                    vars.to.regress=vars_to_regress,
-                    conserve.memory=args$lowmem,
-                    verbose=FALSE
-                )
+                    scaled_norm_seurat_data <- Seurat::SCTransform(
+                        scaled_norm_seurat_data,
+                        assay="RNA",
+                        new.assay.name="SCT",
+                        variable.features.n=args$highvargenes,
+                        method=method,
+                        vars.to.regress=vars_to_regress,
+                        conserve.memory=args$lowmem,
+                        verbose=FALSE
+                    )
+                }
             },
             error = function(e){
-                base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
+                base::print(base::paste("Failed to run cell cycle scoring/regressing for SCT assay with error - ", e))
             }
         )
     }
@@ -272,7 +276,7 @@ rna_log_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
         integrated_seurat_data[["G2M.Score"]] <- NULL
     }
     vars_to_regress <- get_vars_to_regress(integrated_seurat_data, args)                # may or may not include S.Score and G2M.Score columns
-    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    base::print(base::paste0("Regressing out [", paste(vars_to_regress, collapse=", "), "]"))
     integrated_seurat_data <- Seurat::ScaleData(
         integrated_seurat_data,
         vars.to.regress=vars_to_regress,
@@ -291,10 +295,10 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
         SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "RNA"                            # safety measure
         vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)                   # will never include S.Score and G2M.Score
         base::print(
-            base::paste(
-                "Applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                "dataset using", method, "method for initial parameter estimation.",
-                "Regressing out", paste(vars_to_regress, collapse=", ")
+            base::paste0(
+                "Applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                " dataset using ", method, " method for initial parameter estimation. ",
+                "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
             )
         )
         splitted_seurat_data[[i]] <- Seurat::SCTransform(
@@ -322,24 +326,26 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
                             "SCT",
                             cell_cycle_data
                         )
-                        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)          # will include S.Score and G2M.Score
-                        base::print(
-                            base::paste(
-                                "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                                "dataset using", method, "method for initial parameter estimation.",
-                                "Regressing out", paste(vars_to_regress, collapse=", ")
+                        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)          # may include S.Score and G2M.Score if run with --regresscellcycle
+                        if (all(c("S.Score", "G2M.Score") %in% vars_to_regress)){                        # need to rerun SCTransform to regress all variables at once
+                            base::print(
+                                base::paste0(
+                                    "Re-applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                                    " dataset using ", method, " method for initial parameter estimation. ",
+                                    "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
+                                )
                             )
-                        )
-                        splitted_seurat_data[[i]] <- Seurat::SCTransform(
-                            splitted_seurat_data[[i]],
-                            assay="RNA",
-                            new.assay.name="SCT",
-                            variable.features.n=args$highvargenes,
-                            method=method,
-                            vars.to.regress=vars_to_regress,
-                            conserve.memory=args$lowmem,
-                            verbose=FALSE
-                        )
+                            splitted_seurat_data[[i]] <- Seurat::SCTransform(
+                                splitted_seurat_data[[i]],
+                                assay="RNA",
+                                new.assay.name="SCT",
+                                variable.features.n=args$highvargenes,
+                                method=method,
+                                vars.to.regress=vars_to_regress,
+                                conserve.memory=args$lowmem,
+                                verbose=FALSE
+                            )
+                        }
                     },
                     error = function(e){
                         base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
@@ -363,11 +369,11 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
             if(!is.null(args$regresscellcycle) && args$regresscellcycle){
                 vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args, "S.Score&G2M.Score")    # force to exclude "S.Score&G2M.Score"
                 base::print(
-                    base::paste(
-                        "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                        "dataset using", method, "method for initial parameter estimation.",
-                        "Regressing out", paste(vars_to_regress, collapse=", "),
-                        "Skip cell cycle score assignment."
+                    base::paste0(
+                        "Re-applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                        " dataset using ", method, " method for initial parameter estimation. ",
+                        "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]. ",
+                        "Skipping cell cycle score assignment."
                     )
                 )
                 splitted_seurat_data[[i]] <- Seurat::SCTransform(
@@ -425,11 +431,12 @@ rna_preprocess <- function(seurat_data, args, cell_cycle_data=NULL) {
     SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                                        # safety measure
     SeuratObject::Idents(seurat_data) <- "new.ident"                                                        # safety measure
     splitted_seurat_data <- Seurat::SplitObject(seurat_data, split.by="new.ident")                          # to check if we have aggregated datasets
-    if (args$ntgr == "none" | length(splitted_seurat_data) == 1){
+    if (args$ntgr == "none" | args$ntgr == "harmony" | length(splitted_seurat_data) == 1){
         base::print(
             base::paste(
-                "Skipping datasets integration (either forced or only one identity",
-                "is present). Using the original not splitted seurat data."
+                "Skipping datasets integration (either forced to skip, or will be attempted",
+                "to run later with harmony, or only one identity is present). Using the",
+                "original not splitted seurat data."
             )
         )
         if (args$norm == "log"){
@@ -438,7 +445,7 @@ rna_preprocess <- function(seurat_data, args, cell_cycle_data=NULL) {
             processed_seurat_data <- rna_sct_single(seurat_data, args, cell_cycle_data)                     # sets default assay to SCT
         }
     } else {
-        base::print("Running datasets integration using splitted seurat data.")
+        base::print("Running datasets integration using Seurat on splitted data.")
         if (args$norm == "log"){
             processed_seurat_data <- rna_log_integrated(splitted_seurat_data, args, cell_cycle_data)        # sets default assay to rna_integrated
         } else {
@@ -474,6 +481,34 @@ rna_analyze <- function(seurat_data, args, cell_cycle_data=NULL){
         )
     )
     seurat_data <- Seurat::RunPCA(seurat_data, npcs=50, verbose=FALSE)          # add "pca" reduction that should be used in UMAP
+    if (args$ntgr == "harmony"){
+        if (is.null(args$ntgrby) || length(base::unique(base::as.vector(as.character(SeuratObject::Idents(seurat_data))))) == 1){
+            base::print(
+                base::paste(
+                    "Skipping datasets integration with Harmony. Either --ntgrby",
+                    "wasn't provided or data included only a single dataset."
+                )
+            )
+        } else {
+            base::print(
+                base::paste(
+                    "Running datasets integration with harmony using",
+                    SeuratObject::DefaultAssay(seurat_data), "assay.",
+                    "Integrating over", base::paste(args$ntgrby, collapse=", "),
+                    "covariates. Dimensions used:", base::paste(args$dimensions, collapse=", ")
+                )
+            )
+            seurat_data <- harmony::RunHarmony(
+                object=seurat_data,
+                group.by.vars=args$ntgrby,
+                reduction="pca",
+                reduction.save="pca",                                  # overwriting old pca reduction
+                dims.use=args$dimensions,
+                assay.use=SeuratObject::DefaultAssay(seurat_data),     # can be both RNA or SCT depending on --norm parameter
+                verbose=FALSE
+            )
+        }
+    }
     seurat_data <- Seurat::RunUMAP(
         seurat_data,
         reduction="pca",

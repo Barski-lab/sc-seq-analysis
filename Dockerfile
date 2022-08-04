@@ -2,16 +2,21 @@
 # Dockerfile
 #
 # Software:         set of R scripts for single-cell data analysis
-# Software Version: v0.0.9
+# Software Version: v0.0.10
 # Description:      Dockerized version of the set of R scripts for
 #                   single-cell data analysis
 # Website:          https://github.com/Barski-lab/workflows
 # Provides:         set of R scripts for single-cell data analysis
 # Base Image:       satijalab/seurat:4.0.6
-# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.9 .
-# Pull Cmd:         docker pull biowardrobe2/sc-tools:v0.0.9
-# Run Cmd:          docker run --rm -ti biowardrobe2/sc-tools:v0.0.9 /bin/bash
+# Build Cmd:        docker build --no-cache --rm -t biowardrobe2/sc-tools:v0.0.10 -f sc-tools-Dockerfile .
+# Pull Cmd:         docker pull biowardrobe2/sc-tools:v0.0.10
+# Run Cmd:          docker run --rm -ti biowardrobe2/sc-tools:v0.0.10 /bin/bash
 ##########################################################################################################
+#
+# v0.0.10
+# - add integration with Harmony on sc_rna_reduce.R script
+# - bug fix with cell cycle removal in not integrated SCTransformed dataset
+# - updated UCSC Cell Browser from 1.1.1 to 1.2.1
 #
 # v0.0.9
 # - export h5ad files
@@ -103,7 +108,7 @@ RUN apt-get update && \
     R -e 'install.packages("argparse", repo = "https://cloud.r-project.org/")' && \
     R -e 'install.packages("tidyverse", repo = "https://cloud.r-project.org/")' && \
     R -e 'install.packages("modules", repo = "https://cloud.r-project.org/")' && \
-    R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'Matrix.utils', 'DESeq2', 'Rsamtools', 'rtracklayer', 'glmGamPoi', 'Nebulosa', 'limma', 'EnhancedVolcano', 'LoomExperiment'))" && \
+    R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'Matrix.utils', 'DESeq2', 'Rsamtools', 'rtracklayer', 'glmGamPoi', 'Nebulosa', 'limma', 'EnhancedVolcano', 'LoomExperiment', 'harmony'))" && \
     R -e 'install.packages("Signac", repo = "https://cloud.r-project.org/")' && \
     R -e 'devtools::install_github("cellgeni/sceasy")' && \
     R -e 'devtools::install_github("KlugerLab/DAseq")' && \

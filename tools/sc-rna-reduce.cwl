@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.10
 
 
 inputs:
@@ -23,6 +23,20 @@ inputs:
     doc: |
       Path to the RDS file to load Seurat object from. This file should include genes
       expression information stored in the RNA assay.
+
+  datasets_metadata:
+    type: File?
+    inputBinding:
+      prefix: "--metadata"
+    doc: |
+      Path to the TSV/CSV file to optionally extend Seurat object metadata with
+      categorical values using samples identities. First column - 'library_id'
+      should correspond to all unique values from the 'new.ident' column of the
+      loaded Seurat object. If any of the provided in this file columns are already
+      present in the Seurat object metadata, they will be overwritten. When combined
+      with --barcodes parameter, first the metadata will be extended, then barcode
+      filtering will be applied.
+      Default: no extra metadata is added
 
   barcodes_data:
     type: File?
@@ -58,7 +72,7 @@ inputs:
     doc: |
       Normalization method applied to genes expression counts. If loaded Seurat object
       includes multiple datasets, normalization will be run independently for each of
-      them, unless integration is disabled with --ntgr set to 'none'
+      them, unless integration is disabled with 'none' or set to 'harmony'
       Default: sct
 
   integration_method:
@@ -67,13 +81,28 @@ inputs:
     - type: enum
       symbols:
       - "seurat"
+      - "harmony"
       - "none"
     inputBinding:
       prefix: "--ntgr"
     doc: |
       Integration method used for joint analysis of multiple datasets. Automatically
-      set to 'none' if loaded Suerat object includes only one dataset.
+      set to 'none' if loaded Seurat object includes only one dataset.
       Default: seurat
+
+  integrate_by:
+    type:
+    - "null"
+    - string
+    - string[]
+    inputBinding:
+      prefix: "--ntgrby"
+    doc: |
+      Column(s) from the Seurat object metadata to define the variable(s) that should
+      be integrated out when running multiple datasets integration with harmony. May
+      include columns from the extra metadata added with --metadata parameter. Ignored
+      if --ntgr is not set to harmony.
+      Default: new.ident
 
   highly_var_genes_count:
     type: int?
@@ -123,7 +152,8 @@ inputs:
     doc: |
       Dimensionality to use in UMAP projection (from 1 to 50). If single value N
       is provided, use from 1 to N PCs. If multiple values are provided, subset to
-      only selected PCs.
+      only selected PCs. In combination with --ntgr set to harmony, selected principle
+      components will be used in Harmony integration.
       Default: from 1 to 10
 
   umap_spread:
