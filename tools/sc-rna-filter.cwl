@@ -17,7 +17,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -42,9 +42,10 @@ inputs:
     inputBinding:
       prefix: "--grouping"
     doc: |
-      Path to the TSV/CSV file to define datasets grouping. First column - 'library_id'
-      with the values and order that correspond to the 'library_id' column from the
-      '--identity' file, second column 'condition'.
+      Path to the TSV/CSV file to define datasets grouping.
+      First column - 'library_id' with the values and order
+      that correspond to the 'library_id' column from the '
+      --identity' file, second column 'condition'.
       Default: each dataset is assigned to its own group.
 
   barcodes_data:
@@ -52,10 +53,13 @@ inputs:
     inputBinding:
       prefix: "--barcodes"
     doc: |
-      Path to the headerless TSV/CSV file with the list of barcodes to select
-      cells of interest (one barcode per line). Prefilters input feature-barcode
-      matrix to include only selected cells.
-      Default: use all cells.
+      Path to the TSV/CSV file to optionally prefilter and
+      extend Seurat object metadata be selected barcodes.
+      First column should be named as 'barcode'. If file
+      includes any other columns they will be added to the
+      Seurat object metadata ovewriting the existing ones if
+      those are present.
+      Default: all cells used, no extra metadata is added
 
   rna_minimum_cells:
     type: int?
@@ -142,6 +146,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -678,8 +702,8 @@ label: "Single-cell RNA-Seq Filtering Analysis"
 s:name: "Single-cell RNA-Seq Filtering Analysis"
 s:alternateName: "Filters single-cell RNA-Seq datasets based on the common QC metrics"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-rna-filter.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-rna-filter.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -717,3 +741,99 @@ doc: |
   Single-cell RNA-Seq Filtering Analysis
 
   Filters single-cell RNA-Seq datasets based on the common QC metrics.
+
+
+s:about: |
+  usage: sc_rna_filter.R [-h] --mex MEX [MEX ...] --identity
+                                        IDENTITY [--grouping GROUPING]
+                                        [--barcodes BARCODES]
+                                        [--rnamincells RNAMINCELLS]
+                                        [--mingenes [MINGENES [MINGENES ...]]]
+                                        [--maxgenes [MAXGENES [MAXGENES ...]]]
+                                        [--rnaminumi [RNAMINUMI [RNAMINUMI ...]]]
+                                        [--minnovelty [MINNOVELTY [MINNOVELTY ...]]]
+                                        [--mitopattern MITOPATTERN]
+                                        [--maxmt MAXMT] [--pdf] [--verbose]
+                                        [--h5seurat] [--h5ad] [--output OUTPUT]
+                                        [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+                                        [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell RNA-Seq Filtering Analysis
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --mex MEX [MEX ...]   Path to the folder with feature-barcode matrix from
+                          Cell Ranger Count/Aggregate experiment in MEX format.
+                          If multiple locations provided data is assumed to be
+                          not aggregated (outputs from the multiple Cell Ranger
+                          Count experiments) and will be merged before the
+                          analysis.
+    --identity IDENTITY   Path to the metadata TSV/CSV file to set the datasets
+                          identities. If '--mex' points to the Cell Ranger
+                          Aggregate outputs, the aggregation.csv file can be
+                          used. In case of using feature-barcode matrices from a
+                          single or multiple Cell Ranger Count experiments the
+                          file with identities should include at least one
+                          column - 'library_id', and a row with aliases per each
+                          experiment from the '--mex' input. The order of rows
+                          should correspond to the order of feature-barcode
+                          matrices provided in the '--mex' parameter.
+    --grouping GROUPING   Path to the TSV/CSV file to define datasets grouping.
+                          First column - 'library_id' with the values and order
+                          that correspond to the 'library_id' column from the '
+                          --identity' file, second column 'condition'. Default:
+                          each dataset is assigned to its own group.
+    --barcodes BARCODES   Path to the TSV/CSV file to optionally prefilter and
+                          extend Seurat object metadata be selected barcodes.
+                          First column should be named as 'barcode'. If file
+                          includes any other columns they will be added to the
+                          Seurat object metadata ovewriting the existing ones if
+                          those are present. Default: all cells used, no extra
+                          metadata is added
+    --rnamincells RNAMINCELLS
+                          Include only genes detected in at least this many
+                          cells. Ignored when '--mex' points to the feature-
+                          barcode matrices from the multiple Cell Ranger Count
+                          experiments. Default: 5 (applied to all datasets)
+    --mingenes [MINGENES [MINGENES ...]]
+                          Include cells where at least this many genes are
+                          detected. If multiple values provided, each of them
+                          will be applied to the correspondent dataset from the
+                          '--mex' input based on the '--identity' file. Default:
+                          250 (applied to all datasets)
+    --maxgenes [MAXGENES [MAXGENES ...]]
+                          Include cells with the number of genes not bigger than
+                          this value. If multiple values provided, each of them
+                          will be applied to the correspondent dataset from the
+                          '--mex' input based on the '--identity' file. Default:
+                          5000 (applied to all datasets)
+    --rnaminumi [RNAMINUMI [RNAMINUMI ...]]
+                          Include cells where at least this many UMI
+                          (transcripts) are detected. If multiple values
+                          provided, each of them will be applied to the
+                          correspondent dataset from the '--mex' input based on
+                          the '--identity' file. Default: 500 (applied to all
+                          datasets)
+    --minnovelty [MINNOVELTY [MINNOVELTY ...]]
+                          Include cells with the novelty score not lower than
+                          this value, calculated for as log10(genes)/log10(UMI).
+                          If multiple values provided, each of them will be
+                          applied to the correspondent dataset from the '--mex'
+                          input based on the '--identity' file. Default: 0.8
+                          (applied to all datasets)
+    --mitopattern MITOPATTERN
+                          Regex pattern to identify mitochondrial genes.
+                          Default: '^Mt-'
+    --maxmt MAXMT         Include cells with the percentage of transcripts
+                          mapped to mitochondrial genes not bigger than this
+                          value. Default: 5 (applied to all datasets)
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple '--cpus'. Default: 32

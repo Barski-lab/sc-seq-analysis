@@ -3,16 +3,22 @@ import("limma", attach=FALSE)
 import("DAseq", attach=FALSE)
 import("Seurat", attach=FALSE)
 import("Signac", attach=FALSE)
+import("sceasy", attach=FALSE)
+import("hopach", attach=FALSE)
 import("DESeq2", attach=FALSE)
+import("harmony", attach=FALSE)
 import("tibble", attach=FALSE)
 import("glmGamPoi", attach=FALSE)  # safety measure. we don't use it directly, but SCTransform with method="glmGamPoi" needs it
 import("S4Vectors", attach=FALSE)
 import("magrittr", `%>%`, attach=TRUE)
+import("reticulate", attach=FALSE)
+import("BiocParallel", attach=FALSE)
 import("SummarizedExperiment", attach=FALSE)
 
 export(
     "rna_analyze",
     "add_clusters",
+    "integrate_labels",
     "rna_preprocess",
     "rna_log_single",
     "rna_sct_single",
@@ -28,8 +34,34 @@ export(
     "rna_de_analyze",
     "da_analyze",
     "get_de_sample_data",
+    "get_norm_counts_data",
+    "get_clustered_data",
     "get_aggregated_expession"
 )
+
+get_tf_idf_method <- function(method_name){
+    return (
+        switch(
+            method_name,
+            "log-tfidf"    = 1,
+            "tf-logidf"    = 2,
+            "logtf-logidf" = 3,
+            "idf"          = 4
+        )
+    )
+}
+
+get_cluster_algorithm <- function(algorithm_name){
+    return (
+        switch(
+            algorithm_name,
+            "louvain"      = 1,
+            "mult-louvain" = 2,
+            "slm"          = 3,
+            "leiden"       = 4
+        )
+    )
+}
 
 get_vars_to_regress <- function(seurat_data, args, exclude_columns=NULL) {
     vars_to_regress <- NULL
@@ -75,6 +107,7 @@ get_cell_cycle_scores <- function(seurat_data, assay, cell_cycle_data){   # we n
         assay=assay,
         verbose=FALSE
     )
+    # seurat_data[["CC.Diff"]] <- seurat_data[["S.Score"]] - seurat_data[["G2M.Score"]]   # for softer cell cycle removal (https://satijalab.org/seurat/articles/cell_cycle_vignette.html)
     return (seurat_data)
 }
 
@@ -103,7 +136,7 @@ rna_log_single <- function(seurat_data, args, cell_cycle_data=NULL){
         verbose=FALSE
     )
     vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)                           # may or may not include S.Score and G2M.Score columns
-    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    base::print(base::paste0("Regressing out [", paste(vars_to_regress, collapse=", "), "]"))
     scaled_norm_seurat_data <- Seurat::ScaleData(
         scaled_norm_seurat_data,
         vars.to.regress=vars_to_regress,
@@ -118,10 +151,10 @@ rna_sct_single <- function(seurat_data, args, cell_cycle_data=NULL){
     method <- base::ifelse(args$norm=="sctglm", "glmGamPoi", "poisson")
     vars_to_regress <- get_vars_to_regress(seurat_data, args)                       # will never include "S.Score", "G2M.Score" columns as cell cycle scores are not assigned
     base::print(
-        base::paste(
-            "Applying SCTransform using", method,
-            "method for initial parameter estimation.",
-            "Regressing out", paste(vars_to_regress, collapse=", ")
+        base::paste0(
+            "Applying SCTransform using ", method,
+            " method for initial parameter estimation. ",
+            "Regressing out [", paste(vars_to_regress, collapse=", "), "]"
         )
     )
     scaled_norm_seurat_data <- Seurat::SCTransform(
@@ -143,27 +176,29 @@ rna_sct_single <- function(seurat_data, args, cell_cycle_data=NULL){
                     "SCT",
                     cell_cycle_data
                 )
-                vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)   # will include S.Score and G2M.Score
-                base::print(
-                    base::paste(
-                        "Re-applying SCTransform using", method,
-                        "method for initial parameter estimation.",
-                        "Regressing out", paste(vars_to_regress, collapse=", ")
+                vars_to_regress <- get_vars_to_regress(scaled_norm_seurat_data, args)   # may include S.Score and G2M.Score if run with --regresscellcycle
+                if (all(c("S.Score", "G2M.Score") %in% vars_to_regress)){               # need to rerun SCTransform to regress all variables at once
+                    base::print(
+                        base::paste0(
+                            "Re-applying SCTransform using ", method,
+                            " method for initial parameter estimation. ",
+                            "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
+                        )
                     )
-                )
-                scaled_norm_seurat_data <- Seurat::SCTransform(
-                    seurat_data,
-                    assay="RNA",
-                    new.assay.name="SCT",
-                    variable.features.n=args$highvargenes,
-                    method=method,
-                    vars.to.regress=vars_to_regress,
-                    conserve.memory=args$lowmem,
-                    verbose=FALSE
-                )
+                    scaled_norm_seurat_data <- Seurat::SCTransform(
+                        scaled_norm_seurat_data,
+                        assay="RNA",
+                        new.assay.name="SCT",
+                        variable.features.n=args$highvargenes,
+                        method=method,
+                        vars.to.regress=vars_to_regress,
+                        conserve.memory=args$lowmem,
+                        verbose=FALSE
+                    )
+                }
             },
             error = function(e){
-                base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
+                base::print(base::paste("Failed to run cell cycle scoring/regressing for SCT assay with error - ", e))
             }
         )
     }
@@ -272,7 +307,7 @@ rna_log_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
         integrated_seurat_data[["G2M.Score"]] <- NULL
     }
     vars_to_regress <- get_vars_to_regress(integrated_seurat_data, args)                # may or may not include S.Score and G2M.Score columns
-    base::print(base::paste("Regressing out", paste(vars_to_regress, collapse=", ")))
+    base::print(base::paste0("Regressing out [", paste(vars_to_regress, collapse=", "), "]"))
     integrated_seurat_data <- Seurat::ScaleData(
         integrated_seurat_data,
         vars.to.regress=vars_to_regress,
@@ -291,10 +326,10 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
         SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "RNA"                            # safety measure
         vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)                   # will never include S.Score and G2M.Score
         base::print(
-            base::paste(
-                "Applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                "dataset using", method, "method for initial parameter estimation.",
-                "Regressing out", paste(vars_to_regress, collapse=", ")
+            base::paste0(
+                "Applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                " dataset using ", method, " method for initial parameter estimation. ",
+                "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
             )
         )
         splitted_seurat_data[[i]] <- Seurat::SCTransform(
@@ -322,24 +357,26 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
                             "SCT",
                             cell_cycle_data
                         )
-                        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)          # will include S.Score and G2M.Score
-                        base::print(
-                            base::paste(
-                                "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                                "dataset using", method, "method for initial parameter estimation.",
-                                "Regressing out", paste(vars_to_regress, collapse=", ")
+                        vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args)          # may include S.Score and G2M.Score if run with --regresscellcycle
+                        if (all(c("S.Score", "G2M.Score") %in% vars_to_regress)){                        # need to rerun SCTransform to regress all variables at once
+                            base::print(
+                                base::paste0(
+                                    "Re-applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                                    " dataset using ", method, " method for initial parameter estimation. ",
+                                    "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]"
+                                )
                             )
-                        )
-                        splitted_seurat_data[[i]] <- Seurat::SCTransform(
-                            splitted_seurat_data[[i]],
-                            assay="RNA",
-                            new.assay.name="SCT",
-                            variable.features.n=args$highvargenes,
-                            method=method,
-                            vars.to.regress=vars_to_regress,
-                            conserve.memory=args$lowmem,
-                            verbose=FALSE
-                        )
+                            splitted_seurat_data[[i]] <- Seurat::SCTransform(
+                                splitted_seurat_data[[i]],
+                                assay="RNA",
+                                new.assay.name="SCT",
+                                variable.features.n=args$highvargenes,
+                                method=method,
+                                vars.to.regress=vars_to_regress,
+                                conserve.memory=args$lowmem,
+                                verbose=FALSE
+                            )
+                        }
                     },
                     error = function(e){
                         base::print(base::paste("Failed to run cell cycle scoring for SCT assay with error - ", e))
@@ -363,11 +400,11 @@ rna_sct_integrated <- function(splitted_seurat_data, args, cell_cycle_data=NULL)
             if(!is.null(args$regresscellcycle) && args$regresscellcycle){
                 vars_to_regress <- get_vars_to_regress(splitted_seurat_data[[i]], args, "S.Score&G2M.Score")    # force to exclude "S.Score&G2M.Score"
                 base::print(
-                    base::paste(
-                        "Re-applying SCTransform for", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                        "dataset using", method, "method for initial parameter estimation.",
-                        "Regressing out", paste(vars_to_regress, collapse=", "),
-                        "Skip cell cycle score assignment."
+                    base::paste0(
+                        "Re-applying SCTransform for ", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
+                        " dataset using ", method, " method for initial parameter estimation. ",
+                        "Regressing out [", base::paste(vars_to_regress, collapse=", "), "]. ",
+                        "Skipping cell cycle score assignment."
                     )
                 )
                 splitted_seurat_data[[i]] <- Seurat::SCTransform(
@@ -425,11 +462,12 @@ rna_preprocess <- function(seurat_data, args, cell_cycle_data=NULL) {
     SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                                        # safety measure
     SeuratObject::Idents(seurat_data) <- "new.ident"                                                        # safety measure
     splitted_seurat_data <- Seurat::SplitObject(seurat_data, split.by="new.ident")                          # to check if we have aggregated datasets
-    if (args$ntgr == "none" | length(splitted_seurat_data) == 1){
+    if (args$ntgr == "none" | args$ntgr == "harmony" | length(splitted_seurat_data) == 1){
         base::print(
             base::paste(
-                "Skipping datasets integration (either forced or only one identity",
-                "is present). Using the original not splitted seurat data."
+                "Skipping datasets integration (either forced to skip, or will be attempted",
+                "to run later with harmony, or only one identity is present). Using the",
+                "original not splitted seurat data."
             )
         )
         if (args$norm == "log"){
@@ -438,7 +476,7 @@ rna_preprocess <- function(seurat_data, args, cell_cycle_data=NULL) {
             processed_seurat_data <- rna_sct_single(seurat_data, args, cell_cycle_data)                     # sets default assay to SCT
         }
     } else {
-        base::print("Running datasets integration using splitted seurat data.")
+        base::print("Running datasets integration using Seurat on splitted data.")
         if (args$norm == "log"){
             processed_seurat_data <- rna_log_integrated(splitted_seurat_data, args, cell_cycle_data)        # sets default assay to rna_integrated
         } else {
@@ -474,6 +512,34 @@ rna_analyze <- function(seurat_data, args, cell_cycle_data=NULL){
         )
     )
     seurat_data <- Seurat::RunPCA(seurat_data, npcs=50, verbose=FALSE)          # add "pca" reduction that should be used in UMAP
+    if (args$ntgr == "harmony"){
+        if (is.null(args$ntgrby) || length(base::unique(base::as.vector(as.character(SeuratObject::Idents(seurat_data))))) == 1){
+            base::print(
+                base::paste(
+                    "Skipping datasets integration with Harmony. Either --ntgrby",
+                    "wasn't provided or data included only a single dataset."
+                )
+            )
+        } else {
+            base::print(
+                base::paste(
+                    "Running datasets integration with harmony using",
+                    SeuratObject::DefaultAssay(seurat_data), "assay.",
+                    "Integrating over", base::paste(args$ntgrby, collapse=", "),
+                    "covariates. Dimensions used:", base::paste(args$dimensions, collapse=", ")
+                )
+            )
+            seurat_data <- harmony::RunHarmony(
+                object=seurat_data,
+                group.by.vars=args$ntgrby,
+                reduction="pca",
+                reduction.save="pca",                                  # overwriting old pca reduction
+                dims.use=args$dimensions,
+                assay.use=SeuratObject::DefaultAssay(seurat_data),     # can be both RNA or SCT depending on --norm parameter
+                verbose=FALSE
+            )
+        }
+    }
     seurat_data <- Seurat::RunUMAP(
         seurat_data,
         reduction="pca",
@@ -490,7 +556,7 @@ rna_analyze <- function(seurat_data, args, cell_cycle_data=NULL){
     return (seurat_data)
 }
 
-add_clusters <- function(seurat_data, assay, graph_name, reduction, cluster_algorithm, args){
+add_clusters <- function(seurat_data, assay, graph_name, reduction, args){
     SeuratObject::DefaultAssay(seurat_data) <- assay                                  # safety measure
     SeuratObject::Idents(seurat_data) <- "new.ident"                                  # safety measure
     seurat_data <- Seurat::FindNeighbors(
@@ -505,13 +571,95 @@ add_clusters <- function(seurat_data, assay, graph_name, reduction, cluster_algo
         seurat_data,
         resolution=args$resolution,
         graph.name=graph_name,
-        algorithm=cluster_algorithm,
+        algorithm=get_cluster_algorithm(args$algorithm),
         verbose=FALSE
     )
     return (seurat_data)
 }
 
-add_wnn_clusters <- function(seurat_data, graph_name, reductions, dimensions, cluster_algorithm, args){
+integrate_labels <- function(seurat_data, source_columns, args){
+    base::print(
+        base::paste(
+            "Running scTriangulate for", base::paste(source_columns, collapse=", "), "columns.",
+            base::ifelse(
+                !is.null(args$target),
+                base::paste("The results will be saved into the columns with the suffix", args$target),
+                ""
+            )
+        )
+    )
+    temporary_file <- base::tempfile(                                      # will be automatically removed when R exits
+        pattern="sctri",
+        tmpdir=base::tempdir(),
+        fileext=".h5ad"
+    )
+    base::print(base::paste("Saving temporary h5ad file to", temporary_file))
+    sceasy::convertFormat(seurat_data, from="seurat", to="anndata", outFile=temporary_file)
+    script_file <- base::tempfile(                                         # will be automatically removed when R exits
+        pattern="sctri",
+        tmpdir=base::tempdir(),
+        fileext=".py"
+    )
+    output_stream <- base::file(script_file)
+    base::writeLines(
+        c(
+            "import os",
+            "import scanpy",
+            "import resource",
+            "import sctriangulate",
+            "try:",
+            "    R_MAX_VSIZE = int(os.getenv('R_MAX_VSIZE'))",
+            "    resource.setrlimit(resource.RLIMIT_AS, (R_MAX_VSIZE, R_MAX_VSIZE))",         # ignored if run not on Linux
+            "    print(f'Attempting to set the maximum memory limits to {R_MAX_VSIZE}')",
+            "except Exception:",
+            "    print('Failed to set maximum memory limits')",
+            "def sc_triangulate(location, clustering_columns, tmp_dir, cores=None):",
+            "    cores = 1 if cores is None else int(cores)",
+            "    sctri_data = sctriangulate.ScTriangulate(",
+            "        dir=tmp_dir,",
+            "        adata=scanpy.read(location),",
+            "        query=clustering_columns,",
+            "        predict_doublet=False",
+            "    )",
+            "    sctri_data.compute_metrics(",
+            "        cores=cores,",
+            "        scale_sccaf=True",
+            "    )",
+            "    sctri_data.compute_shapley(cores=cores)",
+            "    sctri_data.prune_result()",
+            "    return sctri_data.adata.obs"
+        ),
+        output_stream
+    )
+    base::close(output_stream)
+    reticulate::source_python(script_file)
+    pruned_clusters <- sc_triangulate(
+                           temporary_file,
+                           source_columns,
+                           base::tempdir(),
+                           args$cpus
+                       )[, c("pruned", "confidence", "final_annotation")] %>%
+                       dplyr::mutate("pruned"=base::gsub("@", "__", .$pruned)) %>%  # @ is not good if it somehow appears in any of the filenames
+                       dplyr::rename(
+                           !!tidyselect::all_of(base::paste("custom", args$target, "pruned", sep="_")):="pruned"       # need "custom" prefix for UCSC Browser
+                       ) %>%
+                       dplyr::rename(
+                           !!tidyselect::all_of(base::paste("custom", args$target, "confidence", sep="_")):="confidence"
+                       ) %>%
+                       dplyr::rename(
+                           !!tidyselect::all_of(base::paste("custom", args$target, "final_annotation", sep="_")):="final_annotation"
+                       )
+    base::print(utils::head(pruned_clusters))
+    seurat_data <- SeuratObject::AddMetaData(
+        seurat_data,
+        pruned_clusters[SeuratObject::Cells(seurat_data), , drop=FALSE]    # to guarantee the proper cells order
+    )
+    base::rm(pruned_clusters)  # remove unused data
+    base::gc(verbose=FALSE)
+    return (seurat_data)
+}
+
+add_wnn_clusters <- function(seurat_data, graph_name, reductions, dimensions, args){
     SeuratObject::Idents(seurat_data) <- "new.ident"                                   # safety measure
     seurat_data <- Seurat::FindMultiModalNeighbors(
         seurat_data,
@@ -536,7 +684,7 @@ add_wnn_clusters <- function(seurat_data, graph_name, reductions, dimensions, cl
     seurat_data <- Seurat::FindClusters(
         seurat_data,
         graph.name=graph_name,
-        algorithm=cluster_algorithm,                                    # 3
+        algorithm=get_cluster_algorithm(args$algorithm),
         resolution=args$resolution,
         verbose=FALSE
     )
@@ -593,14 +741,15 @@ atac_preprocess <- function(seurat_data, args) {
 
     base::print(
         base::paste(
-            "Applying TF-IDF normalization. Searching for top highly variable",
-            "features using", args$minvarpeaks, "as a lower percentile bound.",
-            "Analyzing all datasets jointly."
+            "Applying TF-IDF normalization using", args$norm, "method.",
+            "Searching for top highly variable features using", args$minvarpeaks,
+            "as a lower percentile bound. Analyzing all datasets jointly."
         )
     )
     processed_seurat_data <- Signac::RunTFIDF(
         seurat_data,
         assay="ATAC",                                                                           # safety measure
+        method=get_tf_idf_method(args$norm),
         verbose=FALSE
     )
     processed_seurat_data <- Signac::FindTopFeatures(
@@ -611,11 +760,12 @@ atac_preprocess <- function(seurat_data, args) {
     )
 
     splitted_seurat_data <- Seurat::SplitObject(seurat_data, split.by="new.ident")              # need to use original seurat_data for possible integration below
-    if (args$ntgr == "none" | length(splitted_seurat_data) == 1){
+    if (args$ntgr == "none" | args$ntgr == "harmony" | length(splitted_seurat_data) == 1){
         base::print(
             base::paste(
-                "Skipping datasets integration (either forced or only one identity",
-                "is present). Using the original not splitted seurat data."
+                "Skipping datasets integration (either forced to skip, or will be attempted",
+                "to run later with harmony, or only one identity is present). Using the",
+                "original not splitted seurat data."
             )
         )
         processed_seurat_data <- Signac::RunSVD(
@@ -624,8 +774,37 @@ atac_preprocess <- function(seurat_data, args) {
             reduction.name="atac_lsi",                                                          # adding "atac_lsi" for consistency
             verbose=FALSE
         )
+        if (args$ntgr == "harmony"){
+            if (is.null(args$ntgrby) || length(splitted_seurat_data) == 1){
+                base::print(
+                    base::paste(
+                        "Skipping datasets integration with Harmony. Either --ntgrby",
+                        "wasn't provided or data included only a single dataset."
+                    )
+                )
+            } else {
+                base::print(
+                    base::paste(
+                        "Running datasets integration with harmony using",
+                        SeuratObject::DefaultAssay(processed_seurat_data), "assay.",
+                        "Integrating over", base::paste(args$ntgrby, collapse=", "),
+                        "covariates. Dimensions used:", base::paste(args$dimensions, collapse=", ")
+                    )
+                )
+                processed_seurat_data <- harmony::RunHarmony(
+                    object=processed_seurat_data,
+                    group.by.vars=args$ntgrby,
+                    reduction="atac_lsi",
+                    reduction.save="atac_lsi",                                    # overwriting old atac_lsi reduction
+                    dims.use=args$dimensions,
+                    assay.use=SeuratObject::DefaultAssay(processed_seurat_data),
+                    project.dim=FALSE,                                            # for ATAC we don't need to project
+                    verbose=FALSE
+                )
+            }
+        }
     } else {
-        base::print("Running datasets integration using splitted seurat data.")
+        base::print("Running datasets integration using Signac on splitted data.")
         processed_seurat_data <- Signac::RunSVD(
             processed_seurat_data,
             n=50,                                                                               # by default computes 50 singular values
@@ -636,15 +815,16 @@ atac_preprocess <- function(seurat_data, args) {
             SeuratObject::DefaultAssay(splitted_seurat_data[[i]]) <- "ATAC"                     # safety measure
             base::print(
                 base::paste(
-                    "Applying TF-IDF normalization. Searching for top highly variable",
-                    "features using", args$minvarpeaks, "as a lower percentile bound.",
-                    "Analyzing", SeuratObject::Idents(splitted_seurat_data[[i]])[1],
-                    "dataset."
+                    "Applying TF-IDF normalization using", args$norm, "method.",
+                    "Searching for top highly variable features using", args$minvarpeaks,
+                    "as a lower percentile bound. Analyzing",
+                    SeuratObject::Idents(splitted_seurat_data[[i]])[1], "dataset."
                 )
             )
             splitted_seurat_data[[i]] <- Signac::RunTFIDF(
                 splitted_seurat_data[[i]],
                 assay="ATAC",                                                                   # safety measure
+                method=get_tf_idf_method(args$norm),
                 verbose=FALSE
             )
             splitted_seurat_data[[i]] <- Signac::FindTopFeatures(
@@ -742,16 +922,81 @@ get_de_sample_data <- function(seurat_data, samples_order, args){
                    dplyr::arrange(new.ident) %>%                                                  # sorting by levels defined from samples_order
                    tibble::remove_rownames() %>%
                    tibble::column_to_rownames("new.ident") %>%
-                   dplyr::mutate_at(colnames(.), base::factor)                                    # DEseq prefers factors
+                   dplyr::mutate_at(base::colnames(.), base::factor)                              # DEseq prefers factors
     sample_data[[args$splitby]] <- stats::relevel(sample_data[[args$splitby]], args$first)        # relevel to have args$first as a base for DESeq comparison
     base::print(sample_data)
     return (sample_data)
 }
 
+get_norm_counts_data <- function(deseq_data, sample_data, args){
+    if (args$norm == "vst"){
+        base::print("Applying vst transformation (not blind to the experimental design)")
+        norm_counts_data <- DESeq2::vst(deseq_data, blind=FALSE)
+    } else {
+        base::print("Applying rlog transformation (not blind to the experimental design)")
+        norm_counts_data <- DESeq2::rlog(deseq_data, blind=FALSE)
+    }
+    if(!is.null(args$batchby) && !is.null(args$remove) && args$remove){
+        base::print("Removing batch effect from the normalized counts")
+        SummarizedExperiment::assay(norm_counts_data) <- limma::removeBatchEffect(
+            SummarizedExperiment::assay(norm_counts_data),
+            batch=norm_counts_data[[args$batchby]],
+            design=stats::model.matrix(stats::as.formula(base::paste("~",args$splitby)), sample_data)  # should include only splitby
+        )
+    }
+    base::print("Normalized read counts")
+    base::print(utils::head(SummarizedExperiment::assay(norm_counts_data)))
+    base::print(dim(SummarizedExperiment::assay(norm_counts_data)))
+    base::print(SummarizedExperiment::colData(norm_counts_data))
+    return (norm_counts_data)
+}
+
+get_clustered_data <- function(expression_data, center_row, dist, transpose) {
+    if (transpose){
+        base::print("Transposing expression data")
+        expression_data = t(expression_data)
+    }
+    if (center_row) {
+        base::print("Centering expression data by row means")
+        expression_data = expression_data - base::rowMeans(expression_data)    
+    }
+    base::print("Creating distance matrix")
+    distance_matrix <- hopach::distancematrix(expression_data, dist)
+    base::print("Running HOPACH")
+    hopach_results <- hopach::hopach(expression_data, dmat=distance_matrix)
+
+    if (transpose){
+        base::print("Transposing expression data back")
+        expression_data = base::t(expression_data)
+    }
+
+    base::print("Parsing cluster labels")
+    clusters = base::as.data.frame(hopach_results$clustering$labels)
+    base::colnames(clusters) = "label"
+    clusters = base::cbind(
+        clusters,
+        "HCL"=outer(
+            clusters$label,
+            10^c((base::nchar(trunc(clusters$label))[1]-1):0),
+            function(a, b) {
+                base::paste0("c", a %/% b %% 10)
+            }
+        )
+    )
+    clusters = clusters[, c(-1), drop=FALSE]
+    return (
+        list(
+            order=base::as.vector(hopach_results$clustering$order),
+            expression=expression_data,
+            clusters=clusters
+        )
+    )
+}
+
 rna_de_analyze <- function(seurat_data, args, excluded_genes=NULL){
     SeuratObject::DefaultAssay(seurat_data) <- "RNA"                                # safety measure
     SeuratObject::Idents(seurat_data) <- "new.ident"                                # safety measure
-    base::print(base::paste("Aggregating gene expression per sample"))
+    base::print(base::paste("Aggregating raw gene expression counts by dataset"))
     selected_genes <- base::as.vector(as.character(base::rownames(seurat_data)))    # all available genes
     if (!is.null(excluded_genes) && length(excluded_genes) > 0){
         base::print(base::paste("Excluding", length(excluded_genes), "genes"))
@@ -796,8 +1041,8 @@ rna_de_analyze <- function(seurat_data, args, excluded_genes=NULL){
         }
         base::print(                                                               # see this post for details https://support.bioconductor.org/p/95493/#95572
             base::paste(
-                "Using LRT test with the design formula", base::paste(design_formula, collapse=" "),
-                "and the reduced formula", base::paste(reduced_formula, collapse=" "),
+                "Using LRT test with the design formula", base::paste(design_formula, collapse=""),
+                "and the reduced formula", base::paste(reduced_formula, collapse=""),
                 "to calculate p-values."
             )
         )
@@ -806,29 +1051,37 @@ rna_de_analyze <- function(seurat_data, args, excluded_genes=NULL){
             test="LRT",
             reduced=reduced_formula,
             quiet=TRUE,
-            parallel=TRUE
+            parallel=TRUE,
+            BPPARAM=BiocParallel::MulticoreParam(args$cpus)  # add it here as well just in case
         )
     } else {
         base::print(
             base::paste(
-                "Using Wald test with the design formula", base::paste(design_formula, collapse=" "),
+                "Using Wald test with the design formula", base::paste(design_formula, collapse=""),
                 "to calculate p-values."
             )
         )
         deseq_data <- DESeq2::DESeq(
             deseq_data,
             quiet=TRUE,
-            parallel=TRUE
+            parallel=TRUE,
+            BPPARAM=BiocParallel::MulticoreParam(args$cpus)  # add it here as well just in case
         )
     }
+    print("Estimated effects")
     base::print(DESeq2::resultsNames(deseq_data))
+
     de_genes <- DESeq2::results(
         deseq_data,
         contrast=c(args$splitby, args$second, args$first),            # we are interested in seconds vs first fold change values
-        alpha=base::ifelse(is.null(args$alpha), 0.1, args$alpha),     # recommended to set to our FDR threshold https://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
-        parallel=TRUE
+        alpha=base::ifelse(is.null(args$padj), 0.1, args$padj),       # recommended to set to our FDR threshold https://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
+        parallel=TRUE,
+        BPPARAM=BiocParallel::MulticoreParam(args$cpus)                             # add it here as well just in case
     )
+    base::print("Results description")
     base::print(S4Vectors::mcols(de_genes))
+    base::print(utils::head(de_genes))
+
     de_genes <- base::as.data.frame(de_genes) %>%
                 stats::na.omit() %>%                           # exclude all rows where NA is found in any column. See http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#pvaluesNA
                 tibble::rownames_to_column(var="gene")
@@ -838,27 +1091,70 @@ rna_de_analyze <- function(seurat_data, args, excluded_genes=NULL){
         )
     )
 
-    vsd <- DESeq2::vst(deseq_data)
-    vst_counts <- SummarizedExperiment::assay(vsd)[de_genes$gene, ]
-    if(!is.null(args$batchby)){
-        base::print("Removing batch effect from the vst normalized counts")
-        vst_counts <- limma::removeBatchEffect(
-            vst_counts,
-            batch=vsd[[args$batchby]],
-            design=stats::model.matrix(stats::as.formula(base::paste("~",args$splitby)), sample_data)  # should include only splitby
-        )[de_genes$gene, ]
-    }
-    base::print("VST normalized counts data for DE genes")
-    base::print(utils::head(vst_counts))
+    base::print("Normalizing read count data")
+    norm_counts_data <- get_norm_counts_data(deseq_data, sample_data, args)
 
-    base::rm(raw_counts, aggregated_seurat_data, selected_genes, vsd)                       # remove unused data
+    base::print(
+        base::paste(
+            "Creating filtered normalized read counts matrix to include",
+            "only differentially expressed features with padj <= ", args$padj
+        )
+    )
+    row_metadata <- de_genes %>%
+                    tibble::remove_rownames() %>%
+                    tibble::column_to_rownames("gene") %>%
+                    dplyr::select(log2FoldChange, pvalue, padj)  %>%                 # we are interested only in these three columns
+                    dplyr::filter(.$padj<=args$padj) %>%
+                    dplyr::arrange(desc(log2FoldChange))
+    col_metadata <- sample_data %>%
+                    dplyr::mutate_at(base::colnames(.), base::as.vector)             # need to convert to vector, because in our sample_data everything was a factor
+    norm_counts_mat <- SummarizedExperiment::assay(norm_counts_data)[base::as.vector(base::rownames(row_metadata)), ]
+    base::print("Size of the normalized read counts matrix after filtering")
+    base::print(dim(norm_counts_mat))
+
+    if (!is.null(args$cluster)){
+        if (args$cluster == "column" || args$cluster == "both") {
+            base::print("Clustering filtered read counts by columns")
+            clustered_data = get_clustered_data(
+                expression_data=norm_counts_mat,
+                center_row=FALSE,                                                    # centering doesn't influence on the samples order
+                dist=args$columndist,
+                transpose=TRUE
+            )
+            col_metadata <- base::cbind(col_metadata, clustered_data$clusters)       # adding cluster labels
+            col_metadata <- col_metadata[clustered_data$order, ]                     # reordering samples order based on the HOPACH clustering resutls
+            base::print("Reordered samples")
+            base::print(col_metadata)
+        }
+        if (args$cluster == "row" || args$cluster == "both") {
+            base::print("Clustering filtered normalized read counts by rows")
+            clustered_data = get_clustered_data(
+                expression_data=norm_counts_mat,
+                center_row=base::ifelse(is.null(args$center), FALSE, args$center),   # about centering normalized data https://www.biostars.org/p/387863/
+                dist=args$rowdist,
+                transpose=FALSE
+            )
+            norm_counts_mat <- clustered_data$expression                             # can be different because of optional centering by rows mean
+            row_metadata <- base::cbind(row_metadata, clustered_data$clusters)       # adding cluster labels
+            row_metadata <- row_metadata[clustered_data$order, ]                     # reordering features order based on the HOPACH clustering results
+            base::print("Reordered features")
+            base::print(utils::head(row_metadata))
+        }
+        base::rm(clustered_data)
+    }
+
+    base::rm(raw_counts, aggregated_seurat_data, selected_genes)                       # remove unused data
     base::gc(verbose=FALSE)
+
     return (
         list(
-            de_genes=de_genes,
-            de_data=deseq_data,
-            sample_data=sample_data,  # return sample_data even if we can get the same as colData(de_data)
-            vst_counts=vst_counts     # with remove by limma batch effect if args$batchby was provided
+            de_genes=de_genes,                     # not filtered differentialy expressed genes
+            de_data=deseq_data,                    # raw DESeq output
+            sample_data=sample_data,               # we return sample_data even if we can get the same as colData(de_data)
+            norm_counts_data=norm_counts_data,     # not filtered trasformed DESeq counts data, includes all genes
+            norm_counts_mat=norm_counts_mat,       # filtered to only signif. genes normalized counts matrix (not reordered, for order refer to row/col_metadata)
+            row_metadata=row_metadata,             # filtered to only signif. genes ordered based on clusters row metadata for normalized counts matrix
+            col_metadata=col_metadata              # filtered to only signif. genes ordered based on clusters column metadata for normalized counts matrix
         )
     )
 }

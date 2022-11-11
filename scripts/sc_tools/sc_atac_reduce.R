@@ -31,6 +31,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         qc_labels=selected_labels,
         plot_title="Correlation plots between QC metrics and cells LSI dimensions",
         combine_guides="collect",
+        theme=args$theme,
         rootname=paste(args$output, "qc_dim_corr", sep="_"),
         pdf=args$pdf
     )
@@ -45,6 +46,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         alpha=0.4,
         max_cutoff="q99",                                                                   # to prevent outlier cells to distort coloring
         combine_guides="keep",
+        theme=args$theme,
         rootname=paste(args$output, "umap_qc_mtrcs", sep="_"),
         pdf=args$pdf
     )
@@ -57,6 +59,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         group_by="new.ident",
         label=FALSE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, "umap", sep="_"),
         pdf=args$pdf
     )
@@ -71,12 +74,13 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             split_by="new.ident",
             label=FALSE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "umap_spl_idnt", sep="_"),
             pdf=args$pdf
         )
     }
 
-    if (seurat_data@meta.data$new.ident != seurat_data@meta.data$condition){
+    if (all(as.vector(as.character(seurat_data@meta.data$new.ident)) != as.vector(as.character(seurat_data@meta.data$condition)))){
         graphics$dim_plot(
             data=seurat_data,
             reduction="atacumap",
@@ -86,6 +90,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             split_by="condition",
             label=FALSE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "umap_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -104,14 +109,43 @@ get_args <- function(){
         type="character", required="True"
     )
     parser$add_argument(
-        "--barcodes",
+        "--metadata",
         help=paste(
-            "Path to the headerless TSV/CSV file with the list of barcodes to select",
-            "cells of interest (one barcode per line). Prefilters loaded Seurat object",
-            "to include only specific set of cells.",
-            "Default: use all cells."
+            "Path to the TSV/CSV file to optionally extend Seurat object metadata with",
+            "categorical values using samples identities. First column - 'library_id'",
+            "should correspond to all unique values from the 'new.ident' column of the",
+            "loaded Seurat object. If any of the provided in this file columns are already",
+            "present in the Seurat object metadata, they will be overwritten. When combined",
+            "with --barcodes parameter, first the metadata will be extended, then barcode",
+            "filtering will be applied.",
+            "Default: no extra metadata is added"
         ),
         type="character"
+    )
+    parser$add_argument(
+        "--barcodes",
+        help=paste(
+            "Path to the TSV/CSV file to optionally prefilter and extend Seurat object",
+            "metadata be selected barcodes. First column should be named as 'barcode'.",
+            "If file includes any other columns they will be added to the Seurat object",
+            "metadata ovewriting the existing ones if those are present.",
+            "Default: all cells used, no extra metadata is added"
+        ),
+        type="character"
+    )
+    parser$add_argument(
+        "--norm",
+        help=paste(
+            "TF-IDF normalization method applied to chromatin accessibility counts.",
+            "log-tfidf - Stuart & Butler et al. 2019,",
+            "tf-logidf - Cusanovich & Hill et al. 2018,",
+            "logtf-logidf - Andrew Hill,",
+            "idf - 10x Genomics,",
+            "Default: log-tfidf"
+        ),
+        type="character",
+        default="log-tfidf",
+        choices=c("log-tfidf", "tf-logidf", "logtf-logidf", "idf")
     )
     parser$add_argument(
         "--ntgr",
@@ -122,7 +156,18 @@ get_args <- function(){
         ),
         type="character",
         default="signac",
-        choices=c("signac", "none")
+        choices=c("signac", "harmony", "none")
+    )
+    parser$add_argument(
+        "--ntgrby",
+        help=paste(
+            "Column(s) from the Seurat object metadata to define the variable(s) that should",
+            "be integrated out when running multiple datasets integration with harmony. May",
+            "include columns from the extra metadata added with --metadata parameter. Ignored",
+            "if --ntgr is not set to harmony.",
+            "Default: new.ident"
+        ),
+        type="character", default=c("new.ident"), nargs="*"
     )
     parser$add_argument(
         "--minvarpeaks",
@@ -140,7 +185,8 @@ get_args <- function(){
         help=paste(
             "Dimensionality to use for datasets integration and UMAP projection (from 2 to 50).",
             "If single value N is provided, use from 2 to N LSI components. If multiple values are",
-            "provided, subset to only selected LSI components.",
+            "provided, subset to only selected LSI components. In combination with --ntgr set to",
+            "harmony, selected principle components will be used in Harmony integration.",
             "Default: from 2 to 10"
         ),
         type="integer", default=10, nargs="*"
@@ -232,6 +278,15 @@ get_args <- function(){
         type="character", default="./sc"
     )
     parser$add_argument(
+        "--theme",
+        help=paste(
+            "Color theme for all generated plots.",
+            "Default: classic"
+        ),
+        type="character", default="classic",
+        choices=c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void")
+    )
+    parser$add_argument(
         "--cpus",
         help="Number of cores/cpus to use. Default: 1",
         type="integer", default=1
@@ -274,10 +329,21 @@ print("Setting default assay to ATAC")
 DefaultAssay(seurat_data) <- "ATAC"
 debug$print_info(seurat_data, args)
 
-print(paste("Loading barcodes of interest from", args$barcodes))
-barcodes_data <- io$load_barcodes_data(args$barcodes, seurat_data)
-print("Applying cell filters based on the loaded barcodes of interest")
-seurat_data <- filter$apply_cell_filters(seurat_data, barcodes_data)
+if (!is.null(args$metadata)){
+    print("Extending Seurat object with the extra metadata fields")
+    seurat_data <- io$extend_metadata(
+        seurat_data=seurat_data,
+        location=args$metadata,
+        seurat_ref_column="new.ident",
+        meta_ref_column="library_id"
+    )
+    debug$print_info(seurat_data, args)
+}
+
+if (!is.null(args$barcodes)){
+    print("Applying cell filters based on the barcodes of interest")
+    seurat_data <- io$extend_metadata_by_barcode(seurat_data, args$barcodes, TRUE)
+}
 debug$print_info(seurat_data, args)
 
 print("Running ATAC analysis")

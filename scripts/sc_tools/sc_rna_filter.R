@@ -41,6 +41,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         legend_title="QC metrics",
         color_by="labels",
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, paste(c(1, 2) ,collapse="_"), "qc_mtrcs_pca", sep="_"),
         pdf=args$pdf
     )
@@ -57,6 +58,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         legend_title="QC metrics",
         color_by="labels",
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, paste(c(2, 3) ,collapse="_"), "qc_mtrcs_pca", sep="_"),
         pdf=args$pdf
     )
@@ -69,6 +71,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         legend_title="Dataset",
         plot_title=paste("Number of cells per dataset (", suffix, ")", sep=""),
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "cells_count", sep="_"),
         pdf=args$pdf
     )
@@ -86,6 +89,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         scale_x_log10=TRUE,
         zoom_on_intercept=TRUE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "umi_dnst", sep="_"),
         pdf=args$pdf
     )
@@ -104,6 +108,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         zoom_on_intercept=TRUE,
         show_ranked=TRUE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "gene_dnst", sep="_"),
         pdf=args$pdf
     )
@@ -125,7 +130,9 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         plot_title=paste("Genes vs UMI per cell correlation (", suffix, ")", sep=""),
         scale_x_log10=TRUE,
         scale_y_log10=TRUE,
+        show_lm=TRUE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "gene_umi_corr", sep="_"),
         pdf=args$pdf
     )
@@ -141,6 +148,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         plot_title=paste("Percentage of transcripts mapped to mitochondrial genes per cell density (", suffix, ")", sep=""),
         zoom_on_intercept=TRUE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "mito_dnst", sep="_"),
         pdf=args$pdf
     )
@@ -156,6 +164,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         plot_title=paste("Novelty score per cell density (", suffix, ")", sep=""),
         zoom_on_intercept=TRUE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "nvlt_dnst", sep="_"),
         pdf=args$pdf
     )
@@ -170,11 +179,11 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
         pt_size=0,
         combine_guides="collect",
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, suffix, "qc_mtrcs_dnst", sep="_"),
         pdf=args$pdf
     )
-
-    if (seurat_data@meta.data$new.ident != seurat_data@meta.data$condition){
+    if (all(as.vector(as.character(seurat_data@meta.data$new.ident)) != as.vector(as.character(seurat_data@meta.data$condition)))){
         graphics$geom_density_plot(
             data=seurat_data@meta.data,
             x_axis="nCount_RNA",
@@ -188,6 +197,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
             scale_x_log10=TRUE,
             zoom_on_intercept=TRUE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, suffix, "umi_dnst_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -206,6 +216,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
             zoom_on_intercept=TRUE,
             show_ranked=TRUE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, suffix, "gene_dnst_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -221,6 +232,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
             plot_title=paste("Split by grouping condition the percentage of transcripts mapped to mitochondrial genes per cell density (", suffix, ")", sep=""),
             zoom_on_intercept=TRUE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, suffix, "mito_dnst_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -236,6 +248,7 @@ export_all_qc_plots <- function(seurat_data, suffix, args){
             plot_title=paste("Split by grouping condition the novelty score per cell density (", suffix, ")", sep=""),
             zoom_on_intercept=TRUE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, suffix, "nvlt_dnst_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -279,10 +292,11 @@ get_args <- function(){
     parser$add_argument(
         "--barcodes",
         help=paste(
-            "Path to the headerless TSV/CSV file with the list of barcodes to select",
-            "cells of interest (one barcode per line). Prefilters input feature-barcode",
-            "matrix to include only selected cells.",
-            "Default: use all cells."
+            "Path to the TSV/CSV file to optionally prefilter and extend Seurat object",
+            "metadata be selected barcodes. First column should be named as 'barcode'.",
+            "If file includes any other columns they will be added to the Seurat object",
+            "metadata ovewriting the existing ones if those are present.",
+            "Default: all cells used, no extra metadata is added"
         ),
         type="character"
     )
@@ -380,6 +394,15 @@ get_args <- function(){
         type="character", default="./sc"
     )
     parser$add_argument(
+        "--theme",
+        help=paste(
+            "Color theme for all generated plots.",
+            "Default: classic"
+        ),
+        type="character", default="classic",
+        choices=c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void")
+    )
+    parser$add_argument(
         "--cpus",
         help="Number of cores/cpus to use. Default: 1",
         type="integer", default=1
@@ -444,10 +467,10 @@ for (key in names(args)){
 print("Adjusted parameters")
 print(args)
 
-print(paste("Loading barcodes of interest from", args$barcodes))
-barcodes_data <- io$load_barcodes_data(args$barcodes, seurat_data)
-print("Applying cell filters based on the loaded barcodes of interest")
-seurat_data <- filter$apply_cell_filters(seurat_data, barcodes_data)
+if (!is.null(args$barcodes)){
+    print("Applying cell filters based on the barcodes of interest")
+    seurat_data <- io$extend_metadata_by_barcode(seurat_data, args$barcodes, TRUE)
+}
 debug$print_info(seurat_data, args)
 
 print("Adding QC metrics for not filtered datasets")

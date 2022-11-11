@@ -29,6 +29,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         ndims=50,
         reduction="pca",
         plot_title="Elbow plot (from cells PCA)",
+        theme=args$theme,
         rootname=paste(args$output, "elbow", sep="_"),
         pdf=args$pdf
     )
@@ -40,6 +41,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         qc_labels=selected_labels,
         plot_title="Correlation plots between QC metrics and cells PCA components",
         combine_guides="collect",
+        theme=args$theme,
         rootname=paste(args$output, "qc_dim_corr", sep="_"),
         pdf=args$pdf
     )
@@ -54,6 +56,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         alpha=0.4,
         max_cutoff="q99",                                                                   # to prevent outlier cells to distort coloring
         combine_guides="keep",
+        theme=args$theme,
         rootname=paste(args$output, "umap_qc_mtrcs", sep="_"),
         pdf=args$pdf
     )
@@ -65,6 +68,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         group_by="new.ident",
         label=FALSE,
         palette_colors=graphics$D40_COLORS,
+        theme=args$theme,
         rootname=paste(args$output, "umap", sep="_"),
         pdf=args$pdf
     )
@@ -79,8 +83,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             label=FALSE,
             alpha=0.5,
             palette_colors=graphics$D40_COLORS,
-            width=1200,
-            height=400,
+            theme=args$theme,
             rootname=paste(args$output, "umap_spl_ph", sep="_"),
             pdf=args$pdf
         )
@@ -95,8 +98,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         label=FALSE,
         alpha=0.5,
         palette_colors=graphics$D40_COLORS,
-        width=1200,
-        height=400,
+        theme=args$theme,
         rootname=paste(args$output, "umap_spl_mito", sep="_"),
         pdf=args$pdf
     )
@@ -110,8 +112,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         label=FALSE,
         alpha=0.5,
         palette_colors=graphics$D40_COLORS,
-        width=1200,
-        height=400,
+        theme=args$theme,
         rootname=paste(args$output, "umap_spl_umi", sep="_"),
         pdf=args$pdf
     )
@@ -125,8 +126,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
         label=FALSE,
         alpha=0.5,
         palette_colors=graphics$D40_COLORS,
-        width=1200,
-        height=400,
+        theme=args$theme,
         rootname=paste(args$output, "umap_spl_gene", sep="_"),
         pdf=args$pdf
     )
@@ -141,12 +141,13 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             split_by="new.ident",
             label=FALSE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "umap_spl_idnt", sep="_"),
             pdf=args$pdf
         )
     }
 
-    if (seurat_data@meta.data$new.ident != seurat_data@meta.data$condition){
+    if (all(as.vector(as.character(seurat_data@meta.data$new.ident)) != as.vector(as.character(seurat_data@meta.data$condition)))){
         graphics$dim_plot(
             data=seurat_data,
             reduction="rnaumap",
@@ -156,6 +157,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             split_by="condition",
             label=FALSE,
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "umap_spl_cnd", sep="_"),
             pdf=args$pdf
         )
@@ -170,8 +172,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
                 label=FALSE,
                 alpha=0.5,
                 palette_colors=graphics$D40_COLORS,
-                width=1200,
-                height=400,
+                theme=args$theme,
                 rootname=paste(args$output, "umap_gr_cnd_spl_ph", sep="_"),
                 pdf=args$pdf
             )
@@ -186,8 +187,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             label=FALSE,
             alpha=0.5,
             palette_colors=graphics$D40_COLORS,
-            width=1200,
-            height=400,
+            theme=args$theme,
             rootname=paste(args$output, "umap_gr_cnd_spl_mito", sep="_"),
             pdf=args$pdf
         )
@@ -201,8 +201,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             label=FALSE,
             alpha=0.5,
             palette_colors=graphics$D40_COLORS,
-            width=1200,
-            height=400,
+            theme=args$theme,
             rootname=paste(args$output, "umap_gr_cnd_spl_umi", sep="_"),
             pdf=args$pdf
         )
@@ -216,8 +215,7 @@ export_all_dimensionality_plots <- function(seurat_data, args) {
             label=FALSE,
             alpha=0.5,
             palette_colors=graphics$D40_COLORS,
-            width=1200,
-            height=400,
+            theme=args$theme,
             rootname=paste(args$output, "umap_gr_cnd_spl_gene", sep="_"),
             pdf=args$pdf
         )
@@ -236,12 +234,27 @@ get_args <- function(){
         type="character", required="True"
     )
     parser$add_argument(
+        "--metadata",
+        help=paste(
+            "Path to the TSV/CSV file to optionally extend Seurat object metadata with",
+            "categorical values using samples identities. First column - 'library_id'",
+            "should correspond to all unique values from the 'new.ident' column of the",
+            "loaded Seurat object. If any of the provided in this file columns are already",
+            "present in the Seurat object metadata, they will be overwritten. When combined",
+            "with --barcodes parameter, first the metadata will be extended, then barcode",
+            "filtering will be applied.",
+            "Default: no extra metadata is added"
+        ),
+        type="character"
+    )
+    parser$add_argument(
         "--barcodes",
         help=paste(
-            "Path to the headerless TSV/CSV file with the list of barcodes to select",
-            "cells of interest (one barcode per line). Prefilters loaded Seurat object",
-            "to include only specific set of cells.",
-            "Default: use all cells."
+            "Path to the TSV/CSV file to optionally prefilter and extend Seurat object",
+            "metadata be selected barcodes. First column should be named as 'barcode'.",
+            "If file includes any other columns they will be added to the Seurat object",
+            "metadata ovewriting the existing ones if those are present.",
+            "Default: all cells used, no extra metadata is added"
         ),
         type="character"
     )
@@ -261,7 +274,7 @@ get_args <- function(){
         help=paste(
             "Normalization method applied to genes expression counts. If loaded Seurat object",
             "includes multiple datasets, normalization will be run independently for each of",
-            "them, unless integration is disabled with --ntgr set to 'none'",
+            "them, unless integration is disabled with 'none' or set to 'harmony'",
             "Default: sct"
         ),
         type="character",
@@ -272,12 +285,23 @@ get_args <- function(){
         "--ntgr",
         help=paste(
             "Integration method used for joint analysis of multiple datasets. Automatically",
-            "set to 'none' if loaded Suerat object includes only one dataset.",
+            "set to 'none' if loaded Seurat object includes only one dataset.",
             "Default: seurat"
         ),
         type="character",
         default="seurat",
-        choices=c("seurat", "none")
+        choices=c("seurat", "harmony", "none")
+    )
+    parser$add_argument(
+        "--ntgrby",
+        help=paste(
+            "Column(s) from the Seurat object metadata to define the variable(s) that should",
+            "be integrated out when running multiple datasets integration with harmony. May",
+            "include columns from the extra metadata added with --metadata parameter. Ignored",
+            "if --ntgr is not set to harmony.",
+            "Default: new.ident"
+        ),
+        type="character", default=c("new.ident"), nargs="*"
     )
     parser$add_argument(
         "--highvargenes",
@@ -319,7 +343,8 @@ get_args <- function(){
         help=paste(
             "Dimensionality to use in UMAP projection (from 1 to 50). If single value N",
             "is provided, use from 1 to N PCs. If multiple values are provided, subset to",
-            "only selected PCs.",
+            "only selected PCs. In combination with --ntgr set to harmony, selected principle",
+            "components will be used in Harmony integration.",
             "Default: from 1 to 10"
         ),
         type="integer", default=10, nargs="*"
@@ -422,6 +447,15 @@ get_args <- function(){
         type="character", default="./sc"
     )
     parser$add_argument(
+        "--theme",
+        help=paste(
+            "Color theme for all generated plots.",
+            "Default: classic"
+        ),
+        type="character", default="classic",
+        choices=c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void")
+    )
+    parser$add_argument(
         "--cpus",
         help="Number of cores/cpus to use. Default: 1",
         type="integer", default=1
@@ -477,10 +511,21 @@ if(!is.null(cell_cycle_data) && any(c("S.Score", "G2M.Score") %in% colnames(seur
     seurat_data[["G2M.Score"]] <- NULL
 }
 
-print(paste("Loading barcodes of interest from", args$barcodes))
-barcodes_data <- io$load_barcodes_data(args$barcodes, seurat_data)
-print("Applying cell filters based on the loaded barcodes of interest")
-seurat_data <- filter$apply_cell_filters(seurat_data, barcodes_data)
+if (!is.null(args$metadata)){
+    print("Extending Seurat object with the extra metadata fields")
+    seurat_data <- io$extend_metadata(
+        seurat_data=seurat_data,
+        location=args$metadata,
+        seurat_ref_column="new.ident",
+        meta_ref_column="library_id"
+    )
+    debug$print_info(seurat_data, args)
+}
+
+if (!is.null(args$barcodes)){
+    print("Applying cell filters based on the barcodes of interest")
+    seurat_data <- io$extend_metadata_by_barcode(seurat_data, args$barcodes, TRUE)
+}
 debug$print_info(seurat_data, args)
 
 if (!is.null(args$regressgenes)){

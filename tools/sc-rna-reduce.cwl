@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -24,15 +24,32 @@ inputs:
       Path to the RDS file to load Seurat object from. This file should include genes
       expression information stored in the RNA assay.
 
+  datasets_metadata:
+    type: File?
+    inputBinding:
+      prefix: "--metadata"
+    doc: |
+      Path to the TSV/CSV file to optionally extend Seurat object metadata with
+      categorical values using samples identities. First column - 'library_id'
+      should correspond to all unique values from the 'new.ident' column of the
+      loaded Seurat object. If any of the provided in this file columns are already
+      present in the Seurat object metadata, they will be overwritten. When combined
+      with --barcodes parameter, first the metadata will be extended, then barcode
+      filtering will be applied.
+      Default: no extra metadata is added
+
   barcodes_data:
     type: File?
     inputBinding:
       prefix: "--barcodes"
     doc: |
-      Path to the headerless TSV/CSV file with the list of barcodes to select
-      cells of interest (one barcode per line). Prefilters loaded Seurat object
-      to include only specific set of cells.
-      Default: use all cells.
+      Path to the TSV/CSV file to optionally prefilter and
+      extend Seurat object metadata be selected barcodes.
+      First column should be named as 'barcode'. If file
+      includes any other columns they will be added to the
+      Seurat object metadata ovewriting the existing ones if
+      those are present.
+      Default: all cells used, no extra metadata is added
 
   cell_cycle_data:
     type: File?
@@ -58,7 +75,7 @@ inputs:
     doc: |
       Normalization method applied to genes expression counts. If loaded Seurat object
       includes multiple datasets, normalization will be run independently for each of
-      them, unless integration is disabled with --ntgr set to 'none'
+      them, unless integration is disabled with 'none' or set to 'harmony'
       Default: sct
 
   integration_method:
@@ -67,13 +84,28 @@ inputs:
     - type: enum
       symbols:
       - "seurat"
+      - "harmony"
       - "none"
     inputBinding:
       prefix: "--ntgr"
     doc: |
       Integration method used for joint analysis of multiple datasets. Automatically
-      set to 'none' if loaded Suerat object includes only one dataset.
+      set to 'none' if loaded Seurat object includes only one dataset.
       Default: seurat
+
+  integrate_by:
+    type:
+    - "null"
+    - string
+    - string[]
+    inputBinding:
+      prefix: "--ntgrby"
+    doc: |
+      Column(s) from the Seurat object metadata to define the variable(s) that should
+      be integrated out when running multiple datasets integration with harmony. May
+      include columns from the extra metadata added with --metadata parameter. Ignored
+      if --ntgr is not set to harmony.
+      Default: new.ident
 
   highly_var_genes_count:
     type: int?
@@ -123,7 +155,8 @@ inputs:
     doc: |
       Dimensionality to use in UMAP projection (from 1 to 50). If single value N
       is provided, use from 1 to N PCs. If multiple values are provided, subset to
-      only selected PCs.
+      only selected PCs. In combination with --ntgr set to harmony, selected principle
+      components will be used in Harmony integration.
       Default: from 1 to 10
 
   umap_spread:
@@ -211,6 +244,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -579,8 +632,8 @@ label: "Single-cell RNA-Seq Dimensionality Reduction Analysis"
 s:name: "Single-cell RNA-Seq Dimensionality Reduction Analysis"
 s:alternateName: "Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-rna-reduce.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-rna-reduce.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -618,3 +671,133 @@ doc: |
   Single-cell RNA-Seq Dimensionality Reduction Analysis
 
   Integrates multiple single-cell RNA-Seq datasets, reduces dimensionality using PCA.
+
+
+s:about: |
+  usage: sc_rna_reduce.R [-h] --query QUERY [--metadata METADATA]
+                                        [--barcodes BARCODES]
+                                        [--cellcycle CELLCYCLE]
+                                        [--norm {sct,log,sctglm}]
+                                        [--ntgr {seurat,harmony,none}]
+                                        [--ntgrby [NTGRBY [NTGRBY ...]]]
+                                        [--highvargenes HIGHVARGENES]
+                                        [--regressmt]
+                                        [--regressgenes [REGRESSGENES [REGRESSGENES ...]]]
+                                        [--regresscellcycle]
+                                        [--dimensions [DIMENSIONS [DIMENSIONS ...]]]
+                                        [--uspread USPREAD]
+                                        [--umindist UMINDIST]
+                                        [--uneighbors UNEIGHBORS]
+                                        [--umetric {euclidean,manhattan,chebyshev,minkowski,canberra,braycurtis,mahalanobis,wminkowski,seuclidean,cosine,correlation,haversine,hamming,jaccard,dice,russelrao,kulsinski,ll_dirichlet,hellinger,rogerstanimoto,sokalmichener,sokalsneath,yule}]
+                                        [--umethod {uwot,uwot-learn,umap-learn}]
+                                        [--pdf] [--verbose] [--h5seurat]
+                                        [--h5ad] [--cbbuild] [--lowmem]
+                                        [--output OUTPUT]
+                                        [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+                                        [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell RNA-Seq Dimensionality Reduction Analysis
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --query QUERY         Path to the RDS file to load Seurat object from. This
+                          file should include genes expression information
+                          stored in the RNA assay.
+    --metadata METADATA   Path to the TSV/CSV file to optionally extend Seurat
+                          object metadata with categorical values using samples
+                          identities. First column - 'library_id' should
+                          correspond to all unique values from the 'new.ident'
+                          column of the loaded Seurat object. If any of the
+                          provided in this file columns are already present in
+                          the Seurat object metadata, they will be overwritten.
+                          When combined with --barcodes parameter, first the
+                          metadata will be extended, then barcode filtering will
+                          be applied. Default: no extra metadata is added
+    --barcodes BARCODES   Path to the TSV/CSV file to optionally prefilter and
+                          extend Seurat object metadata be selected barcodes.
+                          First column should be named as 'barcode'. If file
+                          includes any other columns they will be added to the
+                          Seurat object metadata ovewriting the existing ones if
+                          those are present. Default: all cells used, no extra
+                          metadata is added
+    --cellcycle CELLCYCLE
+                          Path to the TSV/CSV file with the information for cell
+                          cycle score assignment. First column - 'phase', second
+                          column 'gene_id'. If loaded Seurat object already
+                          includes cell cycle scores in 'S.Score' and
+                          'G2M.Score' metatada columns they will be removed.
+                          Default: skip cell cycle score assignment.
+    --norm {sct,log,sctglm}
+                          Normalization method applied to genes expression
+                          counts. If loaded Seurat object includes multiple
+                          datasets, normalization will be run independently for
+                          each of them, unless integration is disabled with
+                          'none' or set to 'harmony' Default: sct
+    --ntgr {seurat,harmony,none}
+                          Integration method used for joint analysis of multiple
+                          datasets. Automatically set to 'none' if loaded Seurat
+                          object includes only one dataset. Default: seurat
+    --ntgrby [NTGRBY [NTGRBY ...]]
+                          Column(s) from the Seurat object metadata to define
+                          the variable(s) that should be integrated out when
+                          running multiple datasets integration with harmony.
+                          May include columns from the extra metadata added with
+                          --metadata parameter. Ignored if --ntgr is not set to
+                          harmony. Default: new.ident
+    --highvargenes HIGHVARGENES
+                          Number of highly variable genes used in datasets
+                          integration, scaling and dimensionality reduction.
+                          Default: 3000
+    --regressmt           Regress the percentage of transcripts mapped to
+                          mitochondrial genes as a confounding source of
+                          variation. Default: false
+    --regressgenes [REGRESSGENES [REGRESSGENES ...]]
+                          Genes which expression should be regressed as a
+                          confounding source of variation. Default: None
+    --regresscellcycle    Regress cell cycle scores as a confounding source of
+                          variation. Ignored if --cellcycle is not provided.
+                          Default: false
+    --dimensions [DIMENSIONS [DIMENSIONS ...]]
+                          Dimensionality to use in UMAP projection (from 1 to
+                          50). If single value N is provided, use from 1 to N
+                          PCs. If multiple values are provided, subset to only
+                          selected PCs. In combination with --ntgr set to
+                          harmony, selected principle components will be used in
+                          Harmony integration. Default: from 1 to 10
+    --uspread USPREAD     The effective scale of embedded points on UMAP. In
+                          combination with '--mindist' it determines how
+                          clustered/clumped the embedded points are. Default: 1
+    --umindist UMINDIST   Controls how tightly the embedding is allowed compress
+                          points together on UMAP. Larger values ensure embedded
+                          points are moreevenly distributed, while smaller
+                          values allow the algorithm to optimise more accurately
+                          with regard to local structure. Sensible values are in
+                          the range 0.001 to 0.5. Default: 0.3
+    --uneighbors UNEIGHBORS
+                          Determines the number of neighboring points used in
+                          UMAP. Larger values will result in more global
+                          structure being preserved at the loss of detailed
+                          local structure. In general this parameter should
+                          often be in the range 5 to 50. Default: 30
+    --umetric {euclidean,manhattan,chebyshev,minkowski,canberra,braycurtis,mahalanobis,wminkowski,seuclidean,cosine,correlation,haversine,hamming,jaccard,dice,russelrao,kulsinski,ll_dirichlet,hellinger,rogerstanimoto,sokalmichener,sokalsneath,yule}
+                          The metric to use to compute distances in high
+                          dimensional space for UMAP. Default: cosine
+    --umethod {uwot,uwot-learn,umap-learn}
+                          UMAP implementation to run. If set to 'umap-learn' use
+                          --umetric 'correlation' Default: uwot
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --cbbuild             Export results to UCSC Cell Browser. Default: false
+    --lowmem              Attempts to minimize RAM usage when integrating
+                          multiple datasets with SCTransform algorithm (slows
+                          down the computation). Ignored if '--ntgr' is not set
+                          to 'seurat' or if '--norm' is not set to either 'sct'
+                          or 'sctglm'. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple --cpus. Default: 32

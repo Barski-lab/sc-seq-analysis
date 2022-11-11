@@ -33,6 +33,7 @@ export_all_clustering_plots <- function(seurat_data, args){
             label=TRUE,
             label_color="black",
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "umap_res", current_resolution, sep="_"),
             pdf=args$pdf
         )
@@ -45,6 +46,7 @@ export_all_clustering_plots <- function(seurat_data, args){
             legend_title="Cluster",
             group_by=paste("atac_res", current_resolution, sep="."),
             palette_colors=graphics$D40_COLORS,
+            theme=args$theme,
             rootname=paste(args$output, "slh_res", current_resolution, sep="_"),
             pdf=args$pdf
         )
@@ -59,6 +61,7 @@ export_all_clustering_plots <- function(seurat_data, args){
                 label=TRUE,
                 label_color="black",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "umap_spl_idnt_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
@@ -74,6 +77,7 @@ export_all_clustering_plots <- function(seurat_data, args){
                 x_label="Dataset",
                 y_label="Cells percentage",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "cmp_gr_clst_spl_idnt_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
@@ -89,11 +93,12 @@ export_all_clustering_plots <- function(seurat_data, args){
                 x_label="Cluster",
                 y_label="Cells percentage",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "cmp_gr_idnt_spl_clst_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
         }
-        if (seurat_data@meta.data$new.ident != seurat_data@meta.data$condition){
+        if (all(as.vector(as.character(seurat_data@meta.data$new.ident)) != as.vector(as.character(seurat_data@meta.data$condition)))){
             graphics$dim_plot(
                 data=seurat_data,
                 reduction="atacumap",
@@ -104,6 +109,7 @@ export_all_clustering_plots <- function(seurat_data, args){
                 label=TRUE,
                 label_color="black",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "umap_spl_cnd_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
@@ -120,6 +126,7 @@ export_all_clustering_plots <- function(seurat_data, args){
                 x_label="Condition",
                 y_label="Cells percentage",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "cmp_gr_clst_spl_cnd_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
@@ -136,6 +143,7 @@ export_all_clustering_plots <- function(seurat_data, args){
                 x_label="Cluster",
                 y_label="Cells percentage",
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "cmp_gr_cnd_spl_clst_res", current_resolution, sep="_"),
                 pdf=args$pdf
             )
@@ -180,6 +188,7 @@ export_all_coverage_plots <- function(seurat_data, args) {
                 show_annotation=TRUE,
                 show_peaks=TRUE,
                 palette_colors=graphics$D40_COLORS,
+                theme=args$theme,
                 rootname=paste(args$output, "cvrg_res", current_resolution, current_gene, sep="_"),
                 pdf=args$pdf
             )
@@ -218,6 +227,17 @@ get_args <- function(){
         type="character", default="euclidean",
         choices=c(
             "euclidean", "cosine", "manhattan", "hamming"
+        )
+    )
+    parser$add_argument(
+        "--algorithm",
+        help=paste(
+            "Algorithm for modularity optimization when running clustering.",
+            "Default: slm"
+        ),
+        type="character", default="slm",
+        choices=c(
+            "louvain", "mult-louvain", "slm", "leiden"
         )
     )
     parser$add_argument(
@@ -318,6 +338,15 @@ get_args <- function(){
         type="character", default="./sc"
     )
     parser$add_argument(
+        "--theme",
+        help=paste(
+            "Color theme for all generated plots.",
+            "Default: classic"
+        ),
+        type="character", default="classic",
+        choices=c("gray", "bw", "linedraw", "light", "dark", "minimal", "classic", "void")
+    )
+    parser$add_argument(
         "--cpus",
         help="Number of cores/cpus to use. Default: 1",
         type="integer", default=1
@@ -376,7 +405,6 @@ seurat_data <- analyses$add_clusters(
     assay="ATAC",
     graph_name="atac",                          # will be used in all the plot generating functions
     reduction="atac_lsi",
-    cluster_algorithm=3,                        # SLM algorithm
     args=args
 )
 debug$print_info(seurat_data, args)

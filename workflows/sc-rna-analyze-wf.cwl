@@ -27,18 +27,22 @@ inputs:
   grouping_data:
     type: File?
     doc: |
-      Path to the TSV/CSV file to define datasets grouping. First column - 'library_id'
-      with the values and order that correspond to the 'library_id' column from the
-      '--identity' file, second column 'condition'.
+      Path to the TSV/CSV file to define datasets grouping.
+      First column - 'library_id' with the values and order
+      that correspond to the 'library_id' column from the '
+      --identity' file, second column 'condition'.
       Default: each dataset is assigned to its own group.
 
   barcodes_data:
     type: File?
     doc: |
-      Path to the headerless TSV/CSV file with the list of barcodes to select
-      cells of interest (one barcode per line). Prefilters input feature-barcode
-      matrix to include only selected cells.
-      Default: use all cells.
+      Path to the TSV/CSV file to optionally prefilter and
+      extend Seurat object metadata be selected barcodes.
+      First column should be named as 'barcode'. If file
+      includes any other columns they will be added to the
+      Seurat object metadata ovewriting the existing ones if
+      those are present.
+      Default: all cells used, no extra metadata is added
 
   rna_minimum_cells:
     type: int?
@@ -743,6 +747,8 @@ steps:
       cell_cycle_data: cell_cycle_data
       normalization_method:
         default: "sctglm"
+      integration_method:
+        default: "seurat"
       highly_var_genes_count: highly_var_genes_count
       regress_mito_perc: regress_mito_perc
       regress_cellcycle: regress_cellcycle

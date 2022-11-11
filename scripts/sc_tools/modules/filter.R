@@ -2,7 +2,6 @@ import("Seurat")
 import("Signac")
 
 export(
-    "apply_cell_filters",
     "apply_metadata_filters",
     "apply_rna_qc_filters",
     "apply_atac_qc_filters",
@@ -52,10 +51,10 @@ collapse_fragments_list <- function(seurat_data){
     return (seurat_data)
 }
 
-apply_cell_filters <- function(seurat_data, barcodes_data) {
-    filtered_seurat_data <- base::subset(seurat_data, cells=barcodes_data)
-    return (filtered_seurat_data)
-}
+# apply_cell_filters <- function(seurat_data, barcodes_data) {
+#     filtered_seurat_data <- base::subset(seurat_data, cells=barcodes_data)
+#     return (filtered_seurat_data)
+# }
 
 apply_metadata_filters <- function(seurat_data, target_column, target_values){
     base::print(
@@ -71,6 +70,18 @@ apply_metadata_filters <- function(seurat_data, target_column, target_values){
     base::print(base::paste("Cells after filtering", base::nrow(seurat_data@meta.data)))
     return (seurat_data)
 }
+
+# refine_metadata_levels <- function(seurat_data){
+#     for (i in base::colnames(seurat_data@meta.data)){
+#         if (base::is.factor(seurat_data@meta.data[[i]])){
+#             base::print(base::paste("Re-evaluating levels for a factor column", i))
+#             base::print(base::levels(seurat_data@meta.data[[i]]))
+#             seurat_data@meta.data[[i]] <- base::droplevels(seurat_data@meta.data[[i]])  # need to drop levels of the removed values
+#             base::print(base::levels(seurat_data@meta.data[[i]]))
+#         }
+#     }
+#     return (seurat_data)
+# }
 
 apply_rna_qc_filters <- function(seurat_data, cell_identity_data, args) {
     base::print(base::paste("Cells before filtering:", length(SeuratObject::Cells(seurat_data))))

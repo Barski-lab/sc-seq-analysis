@@ -41,9 +41,10 @@ inputs:
   grouping_data:
     type: File?
     doc: |
-      Path to the TSV/CSV file to define datasets grouping. First column - 'library_id'
-      with the values and order that correspond to the 'library_id' column from the
-      '--identity' file, second column 'condition'.
+      Path to the TSV/CSV file to define datasets grouping.
+      First column - 'library_id' with the values and order
+      that correspond to the 'library_id' column from the '
+      --identity' file, second column 'condition'.
       Default: each dataset is assigned to its own group.
 
   blacklist_regions_file:
@@ -54,10 +55,13 @@ inputs:
   barcodes_data:
     type: File?
     doc: |
-      Path to the headerless TSV/CSV file with the list of barcodes to select
-      cells of interest (one barcode per line). Prefilters input feature-barcode
-      matrix to include only selected cells.
-      Default: use all cells.
+      Path to the TSV/CSV file to optionally prefilter and
+      extend Seurat object metadata be selected barcodes.
+      First column should be named as 'barcode'. If file
+      includes any other columns they will be added to the
+      Seurat object metadata ovewriting the existing ones if
+      those are present.
+      Default: all cells used, no extra metadata is added
 
   rna_minimum_cells:
     type: int?
@@ -413,6 +417,13 @@ outputs:
       UMI per cell correlation for RNA vs ATAC assays (not filtered).
       PNG format
 
+  raw_tss_atac_umi_corr_plot_png:
+    type: File?
+    outputSource: sc_multiome_filter/raw_tss_atac_umi_corr_plot_png
+    doc: |
+      TSS enrichment score vs UMI per cell correlation for ATAC assay (not filtered).
+      PNG format
+
   raw_qc_mtrcs_dnst_plot_png:
     type: File?
     outputSource: sc_multiome_filter/raw_qc_mtrcs_dnst_plot_png
@@ -567,6 +578,13 @@ outputs:
     outputSource: sc_multiome_filter/fltr_rna_atac_umi_corr_plot_png
     doc: |
       UMI per cell correlation for RNA vs ATAC assays (filtered).
+      PNG format
+
+  fltr_tss_atac_umi_corr_plot_png:
+    type: File?
+    outputSource: sc_multiome_filter/fltr_tss_atac_umi_corr_plot_png
+    doc: |
+      TSS enrichment score vs UMI per cell correlation for ATAC assay (filtered).
       PNG format
 
   fltr_qc_mtrcs_dnst_plot_png:
@@ -1081,6 +1099,7 @@ steps:
     - raw_peak_dnst_plot_png
     - raw_blck_dnst_plot_png
     - raw_rna_atac_umi_corr_plot_png
+    - raw_tss_atac_umi_corr_plot_png
     - raw_qc_mtrcs_dnst_plot_png
     - raw_tss_nrch_plot_png
     - raw_frgm_hist_png
@@ -1103,6 +1122,7 @@ steps:
     - fltr_peak_dnst_plot_png
     - fltr_blck_dnst_plot_png
     - fltr_rna_atac_umi_corr_plot_png
+    - fltr_tss_atac_umi_corr_plot_png
     - fltr_qc_mtrcs_dnst_plot_png
     - fltr_tss_nrch_plot_png
     - fltr_frgm_hist_png
@@ -1127,6 +1147,8 @@ steps:
       cell_cycle_data: cell_cycle_data
       normalization_method:
         default: "sctglm"
+      integration_method:
+        default: "seurat"
       highly_var_genes_count: highly_var_genes_count
       regress_mito_perc: regress_mito_perc
       regress_cellcycle: regress_cellcycle
@@ -1164,6 +1186,8 @@ steps:
     run: ../tools/sc-atac-reduce.cwl
     in:
       query_data_rds: sc_rna_reduce/seurat_data_rds
+      normalization_method:
+        default: "log-tfidf"
       integration_method:
         default: "signac"
       minimum_var_peaks_perc: minimum_var_peaks_perc

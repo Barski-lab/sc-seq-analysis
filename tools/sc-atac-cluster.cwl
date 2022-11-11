@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -52,6 +52,21 @@ inputs:
     doc: |
       Distance metric used when constructing nearest-neighbor graph before clustering.
       Default: euclidean
+
+  cluster_algorithm:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "louvain"
+      - "mult-louvain"
+      - "slm"
+      - "leiden"
+    inputBinding:
+      prefix: "--algorithm"
+    doc: |
+      Algorithm for modularity optimization when running clustering.
+      Default: slm
 
   resolution:
     type:
@@ -146,6 +161,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -485,8 +520,8 @@ label: "Single-cell ATAC-Seq Cluster Analysis"
 s:name: "Single-cell ATAC-Seq Cluster Analysis"
 s:alternateName: "Clusters single-cell ATAC-Seq datasets, identifies differentially accessible peaks"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-atac-cluster.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-atac-cluster.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -525,3 +560,80 @@ doc: |
 
   Clusters single-cell ATAC-Seq datasets, identifies differentially
   accessible peaks.
+
+
+s:about: |
+  usage: sc_atac_cluster.R
+        [-h] --query QUERY [--dimensions [DIMENSIONS ...]]
+        [--ametric {euclidean,cosine,manhattan,hamming}]
+        [--algorithm {louvain,mult-louvain,slm,leiden}]
+        [--resolution [RESOLUTION ...]] [--fragments FRAGMENTS]
+        [--genes [GENES ...]] [--diffpeaks] [--logfc LOGFC] [--minpct MINPCT]
+        [--testuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}]
+        [--pdf] [--verbose] [--h5seurat] [--h5ad] [--cbbuild] [--output OUTPUT]
+        [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+        [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell ATAC-Seq Cluster Analysis
+
+  options:
+    -h, --help            show this help message and exit
+    --query QUERY         Path to the RDS file to load Seurat object from. This
+                          file should include chromatin accessibility
+                          information stored in the ATAC assay, as well as
+                          'atac_lsi' and 'atacumap' dimensionality reductions
+                          applied to that assay.
+    --dimensions [DIMENSIONS ...]
+                          Dimensionality to use when constructing nearest-
+                          neighbor graph before clustering (from 1 to 50). If
+                          single value N is provided, use from 2 to N
+                          dimensions. If multiple values are provided, subset to
+                          only selected dimensions. Default: from 2 to 10
+    --ametric {euclidean,cosine,manhattan,hamming}
+                          Distance metric used when constructing nearest-
+                          neighbor graph before clustering. Default: euclidean
+    --algorithm {louvain,mult-louvain,slm,leiden}
+                          Algorithm for modularity optimization when running
+                          clustering. Default: slm
+    --resolution [RESOLUTION ...]
+                          Clustering resolution applied to the constructed
+                          nearest-neighbor graph. Can be set as an array.
+                          Default: 0.3, 0.5, 1.0
+    --fragments FRAGMENTS
+                          Count and barcode information for every ATAC fragment
+                          used in the loaded Seurat object. File should be saved
+                          in TSV format with tbi-index file.
+    --genes [GENES ...]   Genes of interest to build Tn5 insertion frequency
+                          plots for the nearest peaks. If loaded Seurat object
+                          includes genes expression information in the RNA assay
+                          it will be additionally shown on the right side of the
+                          plots. Ignored if '--fragments' is not provided.
+                          Default: None
+    --diffpeaks           Identify differentially accessible peaks between each
+                          pair of clusters for all resolutions. Default: false
+    --logfc LOGFC         For differentially accessible peaks identification
+                          include only those peaks that on average have log fold
+                          change difference in the chromatin accessibility
+                          between every tested pair of clusters not lower than
+                          this value. Ignored if '--diffpeaks' is not set.
+                          Default: 0.25
+    --minpct MINPCT       For differentially accessible peaks identification
+                          include only those peaks that are detected in not
+                          lower than this fraction of cells in either of the two
+                          tested clusters. Ignored if '--diffpeaks' is not set.
+                          Default: 0.05
+    --testuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}
+                          Statistical test to use for differentially accessible
+                          peaks identification. Ignored if '--diffpeaks' is not
+                          set. Default: LR
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --cbbuild             Export results to UCSC Cell Browser. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple --cpus. Default: 32

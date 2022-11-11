@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -82,6 +82,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -695,8 +715,8 @@ label: "Single-cell Manual Cell Type Assignment"
 s:name: "Single-cell Manual Cell Type Assignment"
 s:alternateName: "Assigns cell types for clusters based on the provided metadata file"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-ctype-assign.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-ctype-assign.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -734,3 +754,57 @@ doc: |
   Single-cell Manual Cell Type Assignment
 
   Assigns cell types for clusters based on the provided metadata file.
+
+
+s:about: |
+  usage: sc_ctype_assign.R [-h] --query QUERY --celltypes
+                                          CELLTYPES --source SOURCE --target
+                                          TARGET [--fragments FRAGMENTS]
+                                          [--genes [GENES [GENES ...]]] [--pdf]
+                                          [--verbose] [--h5seurat] [--h5ad]
+                                          [--cbbuild] [--output OUTPUT]
+                                          [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+                                          [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell Manual Cell Type Assignment
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --query QUERY         Path to the RDS file to load Seurat object from. This
+                          file should include genes expression and/or chromatin
+                          accessibility information stored in the RNA and ATAC
+                          assays correspondingly. Additionally, 'rnaumap',
+                          and/or 'atacumap', and/or 'wnnumap' dimensionality
+                          reductions should be present.
+    --celltypes CELLTYPES
+                          Path to the TSV/CSV file for manual cell type
+                          assignment for each of the clusters. First column -
+                          'cluster', second column may have arbitrary name.
+    --source SOURCE       Column from the metadata of the loaded Seurat object
+                          to select clusters from.
+    --target TARGET       Column from the metadata of the loaded Seurat object
+                          to save manually assigned cell types.
+    --fragments FRAGMENTS
+                          Count and barcode information for every ATAC fragment
+                          used in the loaded Seurat object. File should be saved
+                          in TSV format with tbi-index file. Ignored if the
+                          loaded Seurat object doesn't include ATAC assay.
+    --genes [GENES [GENES ...]]
+                          Genes of interest to build gene expression and/or Tn5
+                          insertion frequency plots for the nearest peaks. To
+                          build gene expression plots the loaded Seurat object
+                          should include RNA assay. To build Tn5 insertion
+                          frequency plots for the nearest peaks the loaded
+                          Seurat object should include ATAC assay as well as the
+                          --fragments file should be provided. Default: None
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --cbbuild             Export results to UCSC Cell Browser. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple --cpus. Default: 32

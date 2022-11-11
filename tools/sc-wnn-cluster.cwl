@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -53,6 +53,21 @@ inputs:
       is provided, use from 2 to N dimensions. If multiple values are provided,
       subset to only selected dimensions.
       Default: from 2 to 10
+
+  cluster_algorithm:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "louvain"
+      - "mult-louvain"
+      - "slm"
+      - "leiden"
+    inputBinding:
+      prefix: "--algorithm"
+    doc: |
+      Algorithm for modularity optimization when running clustering.
+      Default: slm
 
   umap_spread:
     type: float?
@@ -284,6 +299,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -763,8 +798,8 @@ label: "Single-cell WNN Cluster Analysis"
 s:name: "Single-cell WNN Cluster Analysis"
 s:alternateName: "Clusters multiome ATAC and RNA-Seq datasets, identifies gene markers and differentially accessible peaks"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-wnn-cluster.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-wnn-cluster.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -803,3 +838,134 @@ doc: |
 
   Clusters multiome ATAC and RNA-Seq datasets, identifies gene markers
   and differentially accessible peaks.
+
+
+s:about: |
+  usage: sc_wnn_cluster.R
+        [-h] --query QUERY [--rnadimensions [RNADIMENSIONS ...]]
+        [--atacdimensions [ATACDIMENSIONS ...]]
+        [--algorithm {louvain,mult-louvain,slm,leiden}] [--uspread USPREAD]
+        [--umindist UMINDIST] [--uneighbors UNEIGHBORS]
+        [--umetric {euclidean,manhattan,chebyshev,minkowski,canberra,braycurtis,mahalanobis,wminkowski,seuclidean,cosine,correlation,haversine,hamming,jaccard,dice,russelrao,kulsinski,ll_dirichlet,hellinger,rogerstanimoto,sokalmichener,sokalsneath,yule}]
+        [--umethod {uwot,uwot-learn,umap-learn}]
+        [--resolution [RESOLUTION ...]] [--fragments FRAGMENTS]
+        [--genes [GENES ...]] [--diffgenes] [--diffpeaks] [--rnalogfc RNALOGFC]
+        [--rnaminpct RNAMINPCT] [--rnaonlypos]
+        [--rnatestuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}]
+        [--ataclogfc ATACLOGFC] [--atacminpct ATACMINPCT]
+        [--atactestuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}]
+        [--pdf] [--verbose] [--h5seurat] [--h5ad] [--cbbuild] [--output OUTPUT]
+        [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+        [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell WNN Cluster Analysis
+
+  options:
+    -h, --help            show this help message and exit
+    --query QUERY         Path to the RDS file to load Seurat object from. This
+                          file should include genes expression and chromatin
+                          accessibility information stored in the RNA and ATAC
+                          assays correspondingly. Additionally, 'pca',
+                          'rnaumap', 'atac_lsi' and 'atacumap' dimensionality
+                          reductions should be present.
+    --rnadimensions [RNADIMENSIONS ...]
+                          Dimensionality from the 'pca' reduction to use when
+                          constructing weighted nearest-neighbor graph before
+                          clustering (from 1 to 50). If single value N is
+                          provided, use from 1 to N dimensions. If multiple
+                          values are provided, subset to only selected
+                          dimensions. Default: from 1 to 10
+    --atacdimensions [ATACDIMENSIONS ...]
+                          Dimensionality from the 'atac_lsi' reduction to use
+                          when constructing weighted nearest-neighbor graph
+                          before clustering (from 1 to 50). If single value N is
+                          provided, use from 2 to N dimensions. If multiple
+                          values are provided, subset to only selected
+                          dimensions. Default: from 2 to 10
+    --algorithm {louvain,mult-louvain,slm,leiden}
+                          Algorithm for modularity optimization when running
+                          clustering. Default: louvain
+    --uspread USPREAD     The effective scale of embedded points on UMAP. In
+                          combination with '--mindist' it determines how
+                          clustered/clumped the embedded points are. Default: 1
+    --umindist UMINDIST   Controls how tightly the embedding is allowed compress
+                          points together on UMAP. Larger values ensure embedded
+                          points are moreevenly distributed, while smaller
+                          values allow the algorithm to optimise more accurately
+                          with regard to local structure. Sensible values are in
+                          the range 0.001 to 0.5. Default: 0.3
+    --uneighbors UNEIGHBORS
+                          Determines the number of neighboring points used in
+                          UMAP. Larger values will result in more global
+                          structure being preserved at the loss of detailed
+                          local structure. In general this parameter should
+                          often be in the range 5 to 50. Default: 30
+    --umetric {euclidean,manhattan,chebyshev,minkowski,canberra,braycurtis,mahalanobis,wminkowski,seuclidean,cosine,correlation,haversine,hamming,jaccard,dice,russelrao,kulsinski,ll_dirichlet,hellinger,rogerstanimoto,sokalmichener,sokalsneath,yule}
+                          The metric to use to compute distances in high
+                          dimensional space for UMAP. Default: cosine
+    --umethod {uwot,uwot-learn,umap-learn}
+                          UMAP implementation to run. If set to 'umap-learn' use
+                          --umetric 'correlation' Default: uwot
+    --resolution [RESOLUTION ...]
+                          Clustering resolution applied to the constructed
+                          weighted nearest-neighbor graph. Can be set as an
+                          array. Default: 0.3, 0.5, 1.0
+    --fragments FRAGMENTS
+                          Count and barcode information for every ATAC fragment
+                          used in the loaded Seurat object. File should be saved
+                          in TSV format with tbi-index file.
+    --genes [GENES ...]   Genes of interest to build gene expression and Tn5
+                          insertion frequency plots for the nearest peaks. If '
+                          --fragments' is not provided only gene expression
+                          plots will be built. Default: None
+    --diffgenes           Identify differentially expressed genes (putative gene
+                          markers) between each pair of clusters for all
+                          resolutions. Default: false
+    --diffpeaks           Identify differentially accessible peaks between each
+                          pair of clusters for all resolutions. Default: false
+    --rnalogfc RNALOGFC   For putative gene markers identification include only
+                          those genes that on average have log fold change
+                          difference in expression between every tested pair of
+                          clusters not lower than this value. Ignored if '--
+                          diffgenes' is not set. Default: 0.25
+    --rnaminpct RNAMINPCT
+                          For putative gene markers identification include only
+                          those genes that are detected in not lower than this
+                          fraction of cells in either of the two tested
+                          clusters. Ignored if '--diffgenes' is not set.
+                          Default: 0.1
+    --rnaonlypos          For putative gene markers identification return only
+                          positive markers. Ignored if '--diffgenes' is not set.
+                          Default: false
+    --rnatestuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}
+                          Statistical test to use for putative gene markers
+                          identification. Ignored if '--diffgenes' is not set.
+                          Default: wilcox
+    --ataclogfc ATACLOGFC
+                          For differentially accessible peaks identification
+                          include only those peaks that on average have log fold
+                          change difference in the chromatin accessibility
+                          between every tested pair of clusters not lower than
+                          this value. Ignored if '--diffpeaks' is not set.
+                          Default: 0.25
+    --atacminpct ATACMINPCT
+                          For differentially accessible peaks identification
+                          include only those peaks that are detected in not
+                          lower than this fraction of cells in either of the two
+                          tested clusters. Ignored if '--diffpeaks' is not set.
+                          Default: 0.05
+    --atactestuse {wilcox,bimod,roc,t,negbinom,poisson,LR,MAST,DESeq2}
+                          Statistical test to use for differentially accessible
+                          peaks identification. Ignored if '--diffpeaks' is not
+                          set. Default: LR
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --cbbuild             Export results to UCSC Cell Browser. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple --cpus. Default: 32

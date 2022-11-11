@@ -11,7 +11,7 @@ requirements:
 
 hints:
 - class: DockerRequirement
-  dockerPull: biowardrobe2/sc-tools:v0.0.9
+  dockerPull: biowardrobe2/sc-tools:v0.0.13
 
 
 inputs:
@@ -126,6 +126,26 @@ inputs:
     doc: |
       Export plots in PDF.
       Default: false
+
+  color_theme:
+    type:
+    - "null"
+    - type: enum
+      symbols:
+      - "gray"
+      - "bw"
+      - "linedraw"
+      - "light"
+      - "dark"
+      - "minimal"
+      - "classic"
+      - "void"
+    inputBinding:
+      prefix: "--theme"
+    doc: |
+      Color theme for all generated plots. One of gray, bw, linedraw, light,
+      dark, minimal, classic, void.
+      Default: classic
 
   verbose:
     type: boolean?
@@ -469,8 +489,8 @@ label: "Single-cell Differential Abundance Analysis"
 s:name: "Single-cell Differential Abundance Analysis"
 s:alternateName: "Detects cell subpopulations with differential abundance between datasets split by biological condition"
 
-s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/sc-seq-analysis/main/tools/sc-rna-da-cells.cwl
-s:codeRepository: https://github.com/Barski-lab/sc-seq-analysis
+s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/sc-rna-da-cells.cwl
+s:codeRepository: https://github.com/Barski-lab/workflows
 s:license: http://www.apache.org/licenses/LICENSE-2.0
 
 s:isPartOf:
@@ -509,3 +529,79 @@ doc: |
 
   Detects cell subpopulations with differential abundance
   between datasets split by biological condition.
+
+
+s:about: |
+  usage: sc_rna_da_cells.R [-h] --query QUERY
+                                          [--reduction REDUCTION]
+                                          [--dimensions [DIMENSIONS [DIMENSIONS ...]]]
+                                          [--knn [KNN [KNN ...]]]
+                                          [--metadata METADATA] --splitby
+                                          SPLITBY --first FIRST --second SECOND
+                                          [--resolution [RESOLUTION [RESOLUTION ...]]]
+                                          [--ranges RANGES RANGES] [--pdf]
+                                          [--verbose] [--h5seurat] [--h5ad]
+                                          [--cbbuild] [--output OUTPUT]
+                                          [--theme {gray,bw,linedraw,light,dark,minimal,classic,void}]
+                                          [--cpus CPUS] [--memory MEMORY]
+
+  Single-cell Differential Abundance Analysis
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --query QUERY         Path to the RDS file to load Seurat object from. This
+                          file should include genes expression information
+                          stored in the RNA assay and selected with the
+                          --reduction parameter dimensionality reduction.
+                          Additionally, 'rnaumap', and/or 'atacumap', and/or
+                          'wnnumap' dimensionality reductions should be present.
+    --reduction REDUCTION
+                          Dimensionality reduction to be used for DA analysis.
+                          Default: pca
+    --dimensions [DIMENSIONS [DIMENSIONS ...]]
+                          Dimensionality to use when running DA analysis (from 1
+                          to 50). If single value N is provided, use from 1 to N
+                          PCs. If multiple values are provided, subset to only
+                          selected PCs. Default: from 1 to 10
+    --knn [KNN [KNN ...]]
+                          Array of k values for kNN graph construction when
+                          calculating the score vector for each cell to
+                          represent the DA behavior in the neighborhood.
+                          Default: calculated based on the cells number
+    --metadata METADATA   Path to the TSV/CSV file to optionally extend Seurat
+                          object metadata with categorical values using samples
+                          identities. First column - 'library_id' should
+                          correspond to all unique values from the 'new.ident'
+                          column of the loaded Seurat object. If any of the
+                          provided in this file columns are already present in
+                          the Seurat object metadata, they will be overwritten.
+                          Default: no extra metadata is added
+    --splitby SPLITBY     Column from the Seurat object metadata to split cells
+                          into two groups to run --second vs --first DA
+                          analysis. May include columns from the extra metadata
+                          added with --metadata parameter.
+    --first FIRST         Value from the Seurat object metadata column set with
+                          --splitby to define the first group of cells for DA
+                          analysis.
+    --second SECOND       Value from the Seurat object metadata column set with
+                          --splitby to define the second group of cells for DA
+                          analysis.
+    --resolution [RESOLUTION [RESOLUTION ...]]
+                          Clustering resolution applied to DA cells to identify
+                          DA cells populations. Can be set as an array. Default:
+                          0.01, 0.03, 0.05
+    --ranges RANGES RANGES
+                          DA scores ranges for to filter out not significant
+                          cells. Default: calculated based on the permutation
+                          test
+    --pdf                 Export plots in PDF. Default: false
+    --verbose             Print debug information. Default: false
+    --h5seurat            Save Seurat data to h5seurat file. Default: false
+    --h5ad                Save Seurat data to h5ad file. Default: false
+    --cbbuild             Export results to UCSC Cell Browser. Default: false
+    --output OUTPUT       Output prefix. Default: ./sc
+    --theme {gray,bw,linedraw,light,dark,minimal,classic,void}
+                          Color theme for all generated plots. Default: classic
+    --cpus CPUS           Number of cores/cpus to use. Default: 1
+    --memory MEMORY       Maximum memory in GB allowed to be shared between the
+                          workers when using multiple --cpus. Default: 32
