@@ -70,6 +70,7 @@ Both *sc-rna-filter.cwl* and *sc-multiome-filter.cwl* tools use feature-barcode 
 | [sc-ctype-assign.cwl](./tools/sc-ctype-assign.cwl)                                  | Assigns cell types for clusters based on the provided metadata file |
 | [sc-rna-de-pseudobulk.cwl](./tools/sc-rna-de-pseudobulk.cwl)                        | Identifies differentially expressed genes between groups of cells coerced to pseudobulk datasets |
 | [sc-rna-da-cells.cwl](./tools/sc-rna-da-cells.cwl)                                  | Detects cell subpopulations with differential abundance between datasets split by biological condition |
+| [sc-triangulate.cwl](./tools/sc-triangulate.cwl)                                    | Harmonizes conflicting annotations in single-cell genomics studies using [scTriangulate](https://www.biorxiv.org/content/10.1101/2021.10.16.464640v1.full) |
 
 **Utilities**
 | Name                                 | Description  |
