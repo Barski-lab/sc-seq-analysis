@@ -13,6 +13,7 @@
 
 - *Aizhan Surumbayeva, Michael Kotliar, Linara Gabitova-Cornell, Andrey Kartashov, Suraj Peri, Nathan Salomonis, Artem Barski, Igor Astsaturov, Preparation of mouse pancreatic tumor for single-cell RNA sequencing and analysis of the data, STAR Protocols, Volume 2, Issue 4, 2021, 100989, ISSN 2666-1667,
 https://doi.org/10.1016/j.xpro.2021.100989*
+- *Kotliar M, Kartashov A and Barski A. CWL toolkit for single-cell sequencing data analysis [version 1; not peer reviewed]. F1000Research 2022, 11:819 (poster) (https://doi.org/10.7490/f1000research.1119046.1)*
 
 **Minimum software requirements:**
 - [cwltool](https://github.com/common-workflow-language/cwltool) or alternative CWL runner supporting v1.0
